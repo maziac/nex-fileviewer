@@ -39,6 +39,36 @@ function arrayBufferToBase64(buffer) {
 
 
 /**
+ * Creates a node and appends it to parseNode.
+ * @param title The title for the value. E.g. "SP".
+ * @param valString The value to show.
+ * @param hoverTitleString String to show on hover for the title. Can be undefined.
+ * @param hoverValString String to show on hover for the value. Can be undefined for default.
+ * @returns The new node.
+ */
+function createNode(title: string, valString: string, hoverTitleString?: string, hoverValString?: string): any {
+	if (hoverTitleString == undefined)
+		hoverTitleString = '';
+	if (hoverValString == undefined)
+		hoverValString = '';
+	// Create new node
+	const node = document.createElement("DIV");
+	node.classList.add("simple_value");
+	const html = `
+<div class="simple_value_title indent" title="${hoverTitleString}">${title}:</div>
+<div>&nbsp;</div>
+<div title="${hoverValString}">${valString}</div>
+`;
+	node.innerHTML = html;
+
+	// Append it
+	parseNode.appendChild(node);
+
+	// Return node
+	return node;
+}
+
+/**
  * Returns a hex string.
  * @param value The value to convert.
  * @param size The number of digits (e.g. 2 or 4)
@@ -48,6 +78,15 @@ function getHexString(value: number, size: number): string {
 	if (value == undefined)
 		return "".padStart(size, '?');
 	const s = value.toString(16).toUpperCase().padStart(size, '0');
+	return s;
+}
+
+
+/**
+ * Converts index into a string that can be used as hover string.
+ */
+function getIndexHoverString(i: number): string {
+	const s = 'Index (hex): ' + getHexString(i, 4) + '\nIndex (dec): ' + i;
 	return s;
 }
 
@@ -77,27 +116,14 @@ function htmlTitleValue(title: string, value: number, size: number, hoverTitleSt
 
 	if (hoverTitleString == undefined) {
 		// Add index as hover string
-		const previndex = dataIndex - size;
-		hoverTitleString = title + '\nIndex (hex): ' + getHexString(previndex, 4) + '\nIndex (dec): ' + previndex;
+		const prevIndex = dataIndex - size;
+		hoverTitleString = title + '\n' + getIndexHoverString(prevIndex);
 	}
 	if (hoverValueString == undefined)
 		hoverValueString = title + ': ' + valIntString;
 
 	// Create new node
-	const node = document.createElement("DIV");
-	node.classList.add("simple_value");
-	const html = `
-<div class="simple_value_title indent" title="${hoverTitleString}">${title}:</div>
-<div>&nbsp;</div>
-<div title="${hoverValueString}">${valString}</div>
-`;
-	node.innerHTML = html;
-
-	// Append it
-	parseNode.appendChild(node);
-
-	// Return node
-	return node;
+	return createNode(title, valString, hoverTitleString, hoverValueString);
 }
 
 
@@ -119,7 +145,33 @@ function readData(size: number) {
 /**
  * Reads one byte from the buffer and creates html output for it.
  * @param title The title for the value. E.g. "SP".
- * @returns The html describing title and value.
+ * @param size The number of bytes to read.
+ * @param array An optional map to decode certain values into strings.
+ * If map is given and value is not available 'Unknown' is printed.
+ * @returns The created node.
+ */
+function htmlData(title: string, size: number, array?: Array<any>) {
+	const value = readData(size);
+	if (array) {
+		// Map given
+		const map = new Map<number,string>(array);
+		const s = map.get(value) || 'Unknown';
+		// Create new node
+		const hoverValString = 'Value (hex): ' + value.toString(16) + '\nValue (dec):' + value;
+		const prevIndex = dataIndex - size;
+		const hoverTitleString = title + '\n' + getIndexHoverString(prevIndex);
+		return createNode(title, s, hoverTitleString, hoverValString);
+	}
+	else {
+		// No map given: simple value
+		return htmlTitleValue(title, value, size);
+	}
+}
+
+/**
+ * Reads one byte from the buffer and creates html output for it.
+ * @param title The title for the value. E.g. "IM".
+ * @returns The created node.
  */
 function htmlByte(title: string) {
 	const value = readData(1);
@@ -129,11 +181,50 @@ function htmlByte(title: string) {
 /**
  * Reads one word from the buffer and creates html output for it.
  * @param title The title for the value. E.g. "SP".
- * @returns The html describing title and value.
+ * @returns The created node.
  */
 function htmlWord(title: string) {
 	const value = readData(2);
 	return htmlTitleValue(title, value, 2);
+}
+
+
+/**
+ * Reads a string and creates html output.
+ * @param title The title for the value. E.g. "Version".
+ * @param hoverTitleString String to show on hover for the title. Can be undefined.
+ * @returns The created node.
+ */
+function htmlString(title: string, size: number, hoverTitleString ?: string): any {
+	// Get string
+	let valString = '';
+	for (let i = 0; i < size; i++) {
+		const c = dataBuffer[dataIndex++];
+		valString += String.fromCharCode(c);
+	}
+
+	// Hover string
+	if (hoverTitleString == undefined) {
+		// Add index as hover string
+		const previndex = dataIndex - size;
+		hoverTitleString = title + '\nIndex (hex): ' + getHexString(previndex, 4) + '\nIndex (dec): ' + previndex;
+	}
+
+	// Create new node
+	const node = document.createElement("DIV");
+	node.classList.add("simple_value");
+	const html = `
+<div class="simple_value_title indent" title="${hoverTitleString}">${title}:</div>
+<div>&nbsp;</div>
+<div>${valString}</div>
+`;
+	node.innerHTML = html;
+
+	// Append it
+	parseNode.appendChild(node);
+
+	// Return node
+	return node;
 }
 
 
@@ -203,6 +294,8 @@ function htmlMemDump(size: number, offset = 0) {
 
 	// Append
 	parseNode.innerHTML += html;
+	// Increase index
+	dataIndex += size;
 }
 
 
@@ -211,7 +304,7 @@ function htmlMemDump(size: number, offset = 0) {
  * @param title The title of the node.
  * @param size The size of the node.
  */
-function htmlDetails(title: string, size: number, func: () => void) {
+function htmlDetails(title: string, size: number, func?: () => void) {
 	// Create new node
 	const detailsNode = document.createElement("DETAILS");
 	detailsNode.innerHTML = "<summary>" + title + "</summary>";
@@ -229,18 +322,21 @@ function htmlDetails(title: string, size: number, func: () => void) {
 	parseNode.appendChild(detailsNode);
 
 	// Install listener
-	detailsNode.addEventListener("toggle", function handler(event: any) {
-		// Get parse node and index
-		parseNode = event.target;
-		const indexString = parseNode.getAttribute('data-index');
-		dataIndex = parseInt(indexString);
-		func();
-		this.removeEventListener("toggle", handler);
-	});
+	if (func) {
+		detailsNode.addEventListener("toggle", function handler(event: any) {
+			// Get parse node and index
+			parseNode = event.target;
+			const indexString = parseNode.getAttribute('data-index');
+			dataIndex = parseInt(indexString);
+			func();
+			this.removeEventListener("toggle", handler);
+		});
+	}
 
 	// Return
 	return detailsNode;
 }
+
 
 
 

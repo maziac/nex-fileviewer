@@ -52,7 +52,7 @@ export class EditorProvider implements vscode.CustomReadonlyEditorProvider {
 	 */
 	protected getMainHtml(webviewPanel) {
 		// Add the html styles etc.
-		const extPath = vscode.extensions.getExtension("maziac.nexfileviewer")!.extensionPath as string;
+		const extPath = vscode.extensions.getExtension("maziac.nex-fileviewer")!.extensionPath as string;
 		const mainHtmlFile = path.join(extPath, 'html/main.html');
 		let mainHtml = readFileSync(mainHtmlFile).toString();
 		// Exchange local path
@@ -61,7 +61,7 @@ export class EditorProvider implements vscode.CustomReadonlyEditorProvider {
 		mainHtml = mainHtml.replace('${vscodeResPath}', vscodeResPath);
 
 		// Add a Reload button for debugging
-		//mainHtml = mainHtml.replace('<body>', '<body> <button onclick="parseRoot()">Reload</button>');
+		mainHtml = mainHtml.replace('<body>', '<body> <button onclick="parseRoot()">Reload</button>');
 
 		return mainHtml;
 	}

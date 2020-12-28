@@ -54,56 +54,126 @@ function htmlUlaScreen() {
 
 //---- Parse the data (root level) --------
 function parseRoot() {
-	let divRoot = document.getElementById("div_root");
-	let html = '';
+	parseNode = document.getElementById("div_root");
 
-	// Check length. ZX48K or ZX128K
+	// Meta info
+	let html = '<div>ZX NEX File.</div>';
 	const length = dataBuffer.length;
-	html += '<div><b>';
-	let zx128k = false;
-	if (length == 49179) {
-		// ZX48K
-		html += 'ZX48K SNA file.';
-	}
-	else if (length == 131103 || length == 147487) {
-		// ZX128K
-		html += 'ZX128K SNA file.';
-		zx128k = true;
-	}
-	else {
-		// Length wrong
-		html += '<span class="error">Wrong length.</span>';
-	}
-	html += '</b></div>';
 	html += '<div><b>Length:</b> ' + length + '</div>';
+	html += '<br>';
+	parseNode.innerHTML = html;
+	// End of meta info
 
-	// Print banks
-	let pagedInBank;
-	if (zx128k) {
-		// Used banks
-		html += '<div>Banks: 5, 2, ';
-		// Get used bank
-		const port7FFD = dataBuffer[49181];
-		pagedInBank = port7FFD & 0x03;
-		html += pagedInBank.toString();
-		// Remaining banks
-		for (let i = 2; i < 8; i++) {
-			const p = getMemBankPermutation(i);
-			if (p == pagedInBank)
-				continue;	// skip already read bank
-			html += ', ' + p.toString();
-		}
-		// End
-		html += '</div>';
+	// Header
+	{
+		parseNode = htmlDetails("Header", 0);	// 0 = do not advance the index
+		// Read all header info directly.
+		htmlString('NEXT', 4);
+		htmlString('Version', 4);
+
+		let userRoles = new Map([
+			[1, 'admin']
+		]);
+
+		htmlData('RAMREQ', 1, [[0, '768k'], [1, '1792k']]);
+		htmlData('RAMREQ', 1, value => {
+			switch (value) {
+				case 0: return '768k';
+				case 1: return '1792k';
+				default: return 'Unknown';
+			}
+		});
+
+
+		readValue(1);
+		htmlData('NUMBANKS', decimalValue());
+		addHoverTitle('Number of 16k Banks to Load: 0-112');
+
+		readValue(1);
+		htmlData('LOADSCR', decimalValue());
+		addHoverTitle(`Loading-screen blocks in file (bit-flags):
+128 = no palette block, 64 = "flags 2" in V1.3 part of header define screen, 16 = Hi-Colour, 8 = Hi-Res, 4 = Lo-Res, 2 = ULA, 1 = Layer2
+
+The loader does use common banks to load the graphics into, and show it from, i.e. bank5 for all ULA related modes and banks 9,10 and 11 for Layer2 graphics (loading these banks afterwards as regular bank will thus replace the shown data on screen).
+
+Only Layer2, Tilemap and Lo-Res screens expect the palette block (unless +128 flag set). While one can include multiple screen data in single file (setting up all relevant bits), the recommended/expected usage is to have only one type of screen in NEX file.`);
+
+		beginDetails();
+		htmlData('No palette block', bitValue(0x80));
+		htmlData('flags 2', bitValue(0x40));
+		htmlData('Unused', bitValue(0x20));
+		htmlData('Hi-Colour', bitValue(0x10));
+		htmlData('Hi-Res', bitValue(0x08));
+		htmlData('Lo-Res', bitValue(0x04));
+		htmlData('ULA', bitValue(0x02));
+		htmlData('Layer 2', bitValue(0x01));
+		endDetails();
+
+		readData(1);
+		htmlData('BORDERCOL', colorValue(), 'dec');
+		addHoverTitle('Border Colour: 0-7');
+		addHoverValue(decimalValue());
+
+		readData(2);
+		htmlData('SP', hexValue());
+		addHoverTitle('Stack pointer');
+		addHoverValue('decimalValue');
+
+		html('SP');
+		html('PC');
+		html('NUMFILES');
+		html('BANKS');
+		html('LOADBAR');
+		html('LOADCOL');
+		html('LOADDEL');
+		html('STARTDEL');
+		html('DONTRESETNEXTREGS');
+		html('CORE_MAJOR');
+		html('CORE_MINOR');
+		html('CORE_SUBMINOR');
+		html('HIRESCOL');
+		html('ENTRYBANK');
+		html('FILEHANDLEADDR');
+		html('EXPBUSDISABLE');
+*/
+
+		htmlMemDump(512);
+		// Restore parseNode
+		parseNode = parseNode.parentNode;
 	}
 
-	// End meta info
-	//html += '<hr>';
-	html += '<br>';
-	divRoot.innerHTML = html;
+
+	// Header
+	htmlDetails("Headerb", 512, () => {
+		htmlMemDump(512);
+	});
+
+	// Header
+	htmlDetails("Headerc", 512, () => {
+		htmlMemDump(512);
+	});
+
+	// Header
+	htmlDetails("Header", 512, () => {
+		htmlMemDump(512);
+	});
+
+	// Header
+	htmlDetails("Header", 512, () => {
+		htmlMemDump(512);
+	});
+
+	// Header
+	htmlDetails("Header", 512, () => {
+		htmlMemDump(512);
+	});
+
+	// Header
+	htmlDetails("Header", 512, () => {
+		htmlMemDump(512);
+	});
 
 	// Get registers
-	parseNode = divRoot;
 	htmlByte("I");
 	htmlWord("HL'");
 	htmlWord("DE'");
@@ -120,92 +190,36 @@ function parseRoot() {
 
 	const sp = readData(2);
 	htmlTitleValue("SP", sp, 2);
-	// Print PC if ZX48K
-	if (!zx128k) {
-		const hoverPcText = 'PC is derived from the location SP points to.';
-		let pcNode;
-		if (sp >= 0x4000) {
-			const snaHeaderLength = 27;
-			const pcIndex = snaHeaderLength + sp - 0x4000;
-			const pc = dataBuffer[pcIndex] + 256 * dataBuffer[pcIndex + 1];
-			pcNode = htmlTitleValue("PC", pc, 2, hoverPcText);
-		}
-		else {
-			pcNode = htmlTitleValue("PC", undefined, 2, hoverPcText, "SP points to ROM. Can't decode PC.");
-		}
-		// Indent
-		const keyNode = pcNode.firstElementChild;
-		keyNode.classList.add("indent");
-		pcNode.classList.add("gray");
-	}
 
 	htmlByte("IM");
 	htmlByte("Border");
 
 
-	// Split for different formats
-	if (zx128k) {
-		// ZX128K
-		// Memdumps
-		htmlDetails("Bank5: 4000-7FFF", 0x4000, () => {
-			const index = dataIndex;	// Save
-			// Details as picture
-			htmlDetails("Screen", 0x4000, () => {
-				htmlUlaScreen();
-			});
-			// Details as mem dump
-			dataIndex = index;	// Restore
-			htmlDetails("Memory Dump", 0x4000, () => {
-				htmlMemDump(0x4000, 0x4000);
-			});
+	// ZX48K
+	const mem4000 =
+	htmlDetails("4000-7FFF", 0x4000, () => {
+		const index = dataIndex;	// Save
+		// Details as picture
+		const screen =
+		htmlDetails("Screen", 0x4000, () => {
+			htmlUlaScreen();
 		});
-		htmlDetails("Bank2: 8000-BFFF", 0x8000, () => {
-			htmlMemDump(0x4000, 0x8000);
+		// Details as mem dump
+		dataIndex = index;	// Restore
+		htmlDetails("Memory Dump", 0x4000, () => {
+			htmlMemDump(0x4000, 0x4000);
 		});
-		htmlDetails("Bank" + pagedInBank.toString() + ": C000-FFFF", 0x4000, () => {
-			htmlMemDump(0x4000, 0xC000);
-		});
-		// A few more registers
-		htmlWord("PC");
-		htmlByte("Port 7FFD");
-		htmlByte("TRDOS ROM");
-		// Remaining banks
-		for (let i = 2; i < 8; i++) {
-			const p = getMemBankPermutation(i);
-			if (p == pagedInBank)
-				continue;	// skip already read bank
-			htmlDetails("Bank" + p.toString() + ":", 0x4000, () => {
-				htmlMemDump(0x4000);
-			});
-		}
-	}
-	else {
-		// ZX48K
-		const mem4000 =
-		htmlDetails("4000-7FFF", 0x4000, () => {
-			const index = dataIndex;	// Save
-			// Details as picture
-			const screen =
-			htmlDetails("Screen", 0x4000, () => {
-				htmlUlaScreen();
-			});
-			// Details as mem dump
-			dataIndex = index;	// Restore
-			htmlDetails("Memory Dump", 0x4000, () => {
-				htmlMemDump(0x4000, 0x4000);
-			});
-			// Open screen by default
-			screen.open = true;
-		});
-		htmlDetails("8000-BFFF", 0x4000, () => {
-			htmlMemDump(0x4000, 0x8000);
-		});
-		htmlDetails("C000-FFFF", 0x4000, () => {
-			htmlMemDump(0x4000, 0xC000);
-		});
+		// Open screen by default
+		screen.open = true;
+	});
+	htmlDetails("8000-BFFF", 0x4000, () => {
+		htmlMemDump(0x4000, 0x8000);
+	});
+	htmlDetails("C000-FFFF", 0x4000, () => {
+		htmlMemDump(0x4000, 0xC000);
+	});
 
-		// Open the loading screen
-		mem4000.open = true;
-	}
+	// Open the loading screen
+	mem4000.open = true;
 }
 

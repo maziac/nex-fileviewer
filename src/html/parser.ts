@@ -69,10 +69,12 @@ function createNode(name: string, valString = '', shortDescription = '') {
 	node.classList.add("nomarker");
 	//node.classList.add("basenode");
 	// TODO: Remove DETAILS for description.
+	const lastOffsetHex = getHexString(lastOffset, 4);
+	const lastSizeHex = getHexString(lastSize, 4);
 	const html = `
 <summary>
-	<div class="offset" title="Offset">${lastOffset}</div>
-	<div class="size" title="Size">${lastSize}</div>
+	<div class="offset" title="Offset\nHex: ${lastOffsetHex}">${lastOffset}</div>
+	<div class="size" title="Size\nHex: ${lastSizeHex}">${lastSize}</div>
 	<div class="name">${name}</div>
 	<div class="value">${valString}</div>
 	<details class="description nomarker" >
@@ -141,6 +143,31 @@ function beginDetails() {
  */
 function endDetails() {
 	lastNode = lastNode.parentNode.parentNode;
+}
+
+
+/**
+ * Installs a listener for the toggle event.
+ * The parsing of the data si delayed until toggling.
+ * @param func The fundtion to call to parse/decode the data.
+ */
+function addDelayedParsing(func: () => void) {
+	// Get node
+	const detailsNode = lastNode.lastChild;
+	// Attach attribute
+	detailsNode.setAttribute('data-index', lastOffset.toString());
+	// Install listener
+	if (func) {
+		detailsNode.addEventListener("toggle", function handler(event: any) {
+			// Get parse node and index
+			lastNode = event.target;
+			const indexString = lastNode.getAttribute('data-index');
+			lastOffset = parseInt(indexString);
+			lastSize = 0;
+			func();
+			this.removeEventListener("toggle", handler);
+		});
+	}
 }
 
 
@@ -326,56 +353,66 @@ function stringValue(): string {
 /**
  * Is called if the user opens the details of an item.
  * Decodes the data.
+ * @param displayOffset The displayOffset is added to the index before displaying.
  */
-function htmlMemDump(size: number, offset = 0) {
+function htmlMemDump(displayOffset = 0, hoverRelativeOffset = 'Relative Offset') {
 	let html = '';
 	let prevClose = '';
 
 	// In case of an error, show at least what has been parsed so far.
 	try {
 		// Loop given size
-		for (let i = 0; i < size; i++) {
+		for (let i = 0; i < lastSize; i++) {
 			const k = i % 16;
 			// Get value
-			const iIndex = lastOffset + i;	// For indexing
-			const iOffset = offset + i;	// For display
-			const val = dataBuffer[iIndex];
+			const iOffset = lastOffset + i;	// For indexing
+			const iRelOffset = displayOffset + i;	// For display
+			const val = dataBuffer[iOffset];
 			const valString = getHexString(val, 2);
 			const valIntString = val.toString();
+			const iRelOffsetHex = getHexString(iRelOffset, 4);
 
 			// Start of row?
 			if (k == 0) {
 				// Close previous
 				html += prevClose;
 				prevClose = '</div>';
-				// Calc address
-				let addrString = getHexString(iOffset, 4);
 
 				// Check for same values
 				let l = i + 1
-				for (; l < size; l++) {
+				for (; l < lastSize; l++) {
 					if (val != dataBuffer[lastOffset + l])
 						break;
+					break;
 				}
 				const l16 = l - (l % 16);
 				if (l16 > i + 16) {
 					// At least 2 complete rows contains same values
-					i = l16 - 1;
-					const toAddrString = getHexString(offset + i, 4);
-					const hoverText = 'Index (dec): ' + iOffset + '-' + (offset + i) + '\nValue (dec): ' + valIntString;
-					html += '<div>';
-					html += '<span class="indent mem_index">' + addrString + '-' + toAddrString + ':</span>';
+					if (l == lastSize)
+						i = lastSize - 1;	// end
+					else
+						i = l16 - 1;
+					const iRelOffsetHexEnd = getHexString(displayOffset + i, 4);
+
+					const hoverText = 'Offset (hex): ' + getHexString(iOffset, 4) + '-' + getHexString(lastOffset + i, 4) + '\nOffset (dec): ' + iOffset + '-' + (lastOffset + i) + '\nRelative offset (hex): ' + iRelOffsetHex + '-' + iRelOffsetHexEnd + '\nRelative offset (dec): ' + iRelOffset + '-' + (displayOffset + i) + '\nValue (dec): ' + valIntString;
+
+					html += '<div title="'+hoverText+'">';
+					html += '<span class="indent mem_offset">' + iOffset + '-' + (lastOffset + i) + ' (0x' + iRelOffsetHex + '-0x' + iRelOffsetHexEnd + '):</span>';
 					html += '<span> contain all ' + valString + '</span>';
 					continue;
 				}
 
 				// Afterwards proceed normal
-				html += '<div class="mem_dump"> <div class="indent mem_index">' + addrString + ':</div>';
+				const iOffsetHex = getHexString(iOffset, 4);
+				html += `<div class="mem_dump">
+					<div class="indent mem_offset" title = "Offset\nHex: ${iOffsetHex}">${iOffset}</div>
+				<div class="mem_rel_offset" title="${hoverRelativeOffset}\nDec: ${iRelOffset}"> (0x${iRelOffsetHex})</div>
+				`;
 			}
 
 			// Convert to html
-			const hoverText = 'Index (hex): ' + getHexString(iOffset, 4) + '\nIndex (dec): ' + iOffset + '\nValue (dec): ' + valIntString;
-			html += '<div class="mem_dump_cell" title="' + hoverText + '">' + valString + '&nbsp;</div>';
+			const hoverText = 'Offset (hex): ' + getHexString(iOffset, 4) + '\nOffset (dec): ' + iOffset + '\nRelative offset (hex): ' + iRelOffsetHex + '\nRelative offset (dec): ' + iRelOffset + '\nValue (dec): ' + valIntString;
+			html += '<div class="mem_byte" title="' + hoverText + '">' + valString + '&nbsp;</div>';
 		}
 		// Close
 		html += prevClose;
@@ -389,8 +426,6 @@ function htmlMemDump(size: number, offset = 0) {
 
 	// Append
 	lastNode.innerHTML += html;
-	// Increase index
-	lastOffset += size;
 }
 
 
@@ -433,6 +468,18 @@ function htmlDetails(title: string, size: number, func?: () => void) {
 }
 
 
+/**
+ * Starts the parsing.
+ */
+function parseStart() {
+	// Reset
+	lastOffset = 0;
+	lastSize = 0;
+	lastNode = undefined;
+	// Parse
+	parseRoot();
+}
+
 
 /**
  * Copies the complete html of the document to the clipboard.
@@ -452,10 +499,8 @@ window.addEventListener('message', event => {
 			{
 				// Store in global variable
 				dataBuffer = message.snaData;
-				lastOffset = 0;
-				lastSize = 0;
 				// Parse
-				parseRoot();
+				parseStart();
 			} break;
 	}
 });

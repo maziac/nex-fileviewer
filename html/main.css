@@ -68,13 +68,20 @@
 
 
 /* Expanded content of a memroy dump. */
-.content_mem_dump {
+.mem_dump {
 	display: table-row;
 }
 
 /* The offset inside a memory dump. */
 .mem_offset {
-    color: var(--vscode-editorLineNumber-foreground);
+	color: var(--vscode-editorLineNumber-foreground);
+}
+
+/* The relative offset. */
+.mem_rel_offset {
+	color: var(--vscode-editorLineNumber-foreground);
+	display: table-cell;
+	padding-left: 0.25em;
 }
 
 /* One mem dump byte. */

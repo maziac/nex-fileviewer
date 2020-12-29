@@ -274,12 +274,16 @@ When screens 320x256x8 or 640x256x4 are used, this byte is re-used as palette of
 				addDescription('When Tilemode screen: four bytes array, values to set NextRegs: $6B, $6C, $6E, $6F');
 
 				read(1);
-				createNode('BIG_L2_BAR_POSY', decimalValue(), 'Loading bar y position');
+				createNode('BIG_L2_BAR_POSY', decimalValue(), 'Loading bar y-position');
 				addDescription('When Layer 2 320x256 or 640x256 screen + loading bar: loading bar Y position (bar is 2px tall, so 254 is very bottom)');
 
 				read(349);
 				createNode('RESERVED');
 				addDescription('Reserved for future extensions, set to zero in older versions of file format.');
+				addDelayedParsing(() => {
+					read(349);
+					htmlMemDump();
+				});
 
 				read(4);
 				createNode('CRC32C', decimalValue(), 'Optional checksum');
@@ -287,87 +291,7 @@ When screens 320x256x8 or 640x256x4 are used, this byte is re-used as palette of
 			}
 		}
 
-		/*
-		lastNode = htmlDetails("Header");
-
-
-		// Read all header info directly.
-		htmlString('NEXT', 4);
-		htmlString('Version', 4);
-
-		let userRoles = new Map([
-			[1, 'admin']
-		]);
-
-		htmlData('RAMREQ', 1, [[0, '768k'], [1, '1792k']]);
-		htmlData('RAMREQ', 1, value => {
-			switch (value) {
-				case 0: return '768k';
-				case 1: return '1792k';
-				default: return 'Unknown';
-			}
-		});
-
-
-		readValue(1);
-		createNode('NUMBANKS', decimalValue());
-		addHoverTitle('Number of 16k Banks to Load: 0-112');
-
-		readValue(1);
-		htmlData('LOADSCR', decimalValue());
-		addHoverTitle(`Loading-screen blocks in file (bit-flags):
-128 = no palette block, 64 = "flags 2" in V1.3 part of header define screen, 16 = Hi-Colour, 8 = Hi-Res, 4 = Lo-Res, 2 = ULA, 1 = Layer2
-
-The loader does use common banks to load the graphics into, and show it from, i.e. bank5 for all ULA related modes and banks 9,10 and 11 for Layer2 graphics (loading these banks afterwards as regular bank will thus replace the shown data on screen).
-
-Only Layer2, Tilemap and Lo-Res screens expect the palette block (unless +128 flag set). While one can include multiple screen data in single file (setting up all relevant bits), the recommended/expected usage is to have only one type of screen in NEX file.`);
-
-		beginDetails();
-		htmlData('No palette block', bitValue(0x80));
-		htmlData('flags 2', bitValue(0x40));
-		htmlData('Unused', bitValue(0x20));
-		htmlData('Hi-Colour', bitValue(0x10));
-		htmlData('Hi-Res', bitValue(0x08));
-		htmlData('Lo-Res', bitValue(0x04));
-		htmlData('ULA', bitValue(0x02));
-		htmlData('Layer 2', bitValue(0x01));
-		endDetails();
-
-		readData(1);
-		htmlData('BORDERCOL', colorValue(), 'dec');
-		addHoverTitle('Border Colour: 0-7');
-		addHoverValue(decimalValue());
-
-		readData(2);
-		htmlData('SP', hexValue());
-		addHoverTitle('Stack pointer');
-		addHoverValue('decimalValue');
-
-		html('SP');
-		html('PC');
-		html('NUMFILES');
-		html('BANKS');
-		html('LOADBAR');
-		html('LOADCOL');
-		html('LOADDEL');
-		html('STARTDEL');
-		html('DONTRESETNEXTREGS');
-		html('CORE_MAJOR');
-		html('CORE_MINOR');
-		html('CORE_SUBMINOR');
-		html('HIRESCOL');
-		html('ENTRYBANK');
-		html('FILEHANDLEADDR');
-		html('EXPBUSDISABLE');
-*/
-
-		/*
-		htmlMemDump(512);
-		// Restore parseNode
-		lastNode = lastNode.parentNode;
-	}
-
-
+/*
 	// Header
 	htmlDetails("Headerb", 512, () => {
 		htmlMemDump(512);

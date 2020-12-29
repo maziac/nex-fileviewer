@@ -66,7 +66,9 @@ function arrayBufferToBase64(buffer) {
 function createNode(name: string, valString = '', shortDescription = '') {
 	// Create new node
 	const node = document.createElement("DETAILS");
+	node.classList.add("nomarker");
 	//node.classList.add("basenode");
+	// TODO: Remove DETAILS for description.
 	const html = `
 <summary>
 	<div class="offset" title="Offset">${lastOffset}</div>
@@ -126,6 +128,8 @@ function convertLineBreaks(s: string) {
  * Indents.
  */
 function beginDetails() {
+	const node = lastNode.lastChild;
+	node.classList.remove("nomarker");
 	lastNode = lastContentNode;
 }
 

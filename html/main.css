@@ -50,7 +50,7 @@
 
 /* Class for the name */
 .name {
-	min-width: 7em;
+	min-width: 9em;
 	font-weight: bold;
 }
 
@@ -97,4 +97,11 @@ summary > div {
 summary::-webkit-details-marker {
 	padding-top: 0.5em;
 	padding-left: 0;
+    color: var(--vscode-editorLineNumber-foreground);
 }
+
+/* Hides the details marker. */
+.nomarker summary::-webkit-details-marker {
+	color: transparent;
+}
+

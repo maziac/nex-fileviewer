@@ -77,8 +77,24 @@ function zxColorValue() {
 function coreVersionValue(): string {
 	const charOffset = '0'.charCodeAt(0);
 	let s = String.fromCharCode(charOffset + dataBuffer[lastOffset]) + '.';
-	s += String.fromCharCode(charOffset + dataBuffer[lastOffset+1]) + '.';
-	s += String.fromCharCode(charOffset + dataBuffer[lastOffset+2]);
+	s += String.fromCharCode(charOffset + dataBuffer[lastOffset + 1]) + '.';
+	s += String.fromCharCode(charOffset + dataBuffer[lastOffset + 2]);
+	return s;
+}
+
+/**
+ * @returns The included banks. If string gets too long '...' is returned instead.
+ */
+function banksValue(): string {
+	let s = '';
+	for (let i = 0; i < lastSize; i++) {
+		const val = dataBuffer[lastOffset + i];
+		if (val == 1) {
+			s += i + ' ';
+			if (s.length > 15)
+				return '...';
+		}
+	}
 	return s;
 }
 
@@ -155,7 +171,7 @@ Only Layer2, Tilemap and Lo-Res screens expect the palette block (unless +128 fl
 			addDescription("Obsolete");
 
 			read(112);
-			createNode('BANKS', '', 'Array of included banks');
+			createNode('BANKS', banksValue(), 'Array of included banks');
 			let descr = 'byte flag (0/1) of 16k banks included in the file - this array is in regular order 0..111, i.e. bank5 in file will set 1 to header byte at offset 18+5 = 23, but the 16kiB of data for bank 5 are first in the file (order of bank data in file is: 5,2,0,1,3,4,6,7,8,9,10,...,111)';
 			addDescription(descr);
 			beginDetails();
@@ -163,7 +179,7 @@ Only Layer2, Tilemap and Lo-Res screens expect the palette block (unless +128 fl
 			lastSize = 0;
 			for (let i = 0; i < 112; i++) {
 				read(1);
-				createLine('Bank'+i, decimalValue());
+				createNode('Bank'+i, decimalValue());
 			}
 			endDetails();
 

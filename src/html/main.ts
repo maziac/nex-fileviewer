@@ -71,6 +71,17 @@ function zxColorValue() {
 }
 
 
+/**
+ * @returns The core version number.
+ */
+function coreVersionValue(): string {
+	const charOffset = '0'.charCodeAt(0);
+	let s = String.fromCharCode(charOffset + dataBuffer[lastOffset]) + '.';
+	s += String.fromCharCode(charOffset + dataBuffer[lastOffset+1]) + '.';
+	s += String.fromCharCode(charOffset + dataBuffer[lastOffset+2]);
+	return s;
+}
+
 
 //---- Parse the data (root level) --------
 function parseRoot() {
@@ -93,16 +104,16 @@ function parseRoot() {
 			beginDetails();
 
 			read(4);
-			createNode('Next', stringValue());
+			createNode('NEXT', stringValue());
 
 			read(4);
-			createNode('Version', stringValue());
+			createNode('VERSION', stringValue());
 
 			read(1);
-			createNode('NUMBANKS', decimalValue(), 'Number of 16k Banks to Load: 0-112');
+			createNode('NUM_BANKS', decimalValue(), 'Number of 16k Banks to Load: 0-112');
 
 			read(1);
-			createNode('LOADSCR', hex0xValue(), 'Loading-screen blocks in file');
+			createNode('LOAD_SCREENS', hex0xValue(), 'Loading-screen blocks in file');
 			const loadScrDescr = convertLineBreaks(`
 128 = no palette block, 64 = "flags 2" in V1.3 part of header define screen, 16 = Hi-Colour, 8 = Hi-Res, 4 = Lo-Res, 2 = ULA, 1 = Layer2
 
@@ -127,11 +138,11 @@ Only Layer2, Tilemap and Lo-Res screens expect the palette block (unless +128 fl
 
 
 			read(1);
-			createNode('BORDERCOL', zxColorValue(), 'Border Color: 0-7');
+			createNode('BORDER_COLOR', zxColorValue(), 'Border Color: 0-7');
 			addHoverValue(decimalValue());
 
 			read(2);
-			createNode('SP', "defirire"+hex0xValue(), 'Stack pointer');
+			createNode('SP', hex0xValue(), 'Stack pointer');
 			addHoverValue(decimalValue());
 
 			read(2);
@@ -140,7 +151,7 @@ Only Layer2, Tilemap and Lo-Res screens expect the palette block (unless +128 fl
 			addHoverValue(decimalValue());
 
 			read(2);
-			createNode('NUMFILES', decimalValue(), 'Number of extra files');
+			createNode('NUM_FILES', decimalValue(), 'Number of extra files');
 			addDescription("Obsolete");
 
 			read(112);
@@ -155,6 +166,56 @@ Only Layer2, Tilemap and Lo-Res screens expect the palette block (unless +128 fl
 				createLine('Bank'+i, decimalValue());
 			}
 			endDetails();
+
+			read(1);
+			createNode('LOAD_BAR', decimalValue(), 'Layer2 "loading bar"');
+			addDescription('0 = OFF, 1 = ON(works only in combination with Layer2 screen data) ');
+
+			read(1);
+			createNode('LOAD_COLOR', decimalValue(), '"Loading bar" color');
+			addDescription('"Loading bar" color (0..255) (for 640x256x4 mode the byte defines pixels pair)');
+
+			read(1);
+			createNode('LOAD_DELAY', decimalValue(), 'Loading delay per bank');
+			addDescription('Loading delay per bank (0..255 amount of frames), 0 = no delay');
+
+			read(1);
+			createNode('START_DELAY', decimalValue(), 'Start delay');
+			addDescription('Start delay (0..255 amount of frames), 0 = no delay');
+
+			read(1);
+			createNode('PRESERVE_NEXT_REGS', decimalValue(), 'Preserve Next-Registers');
+			addDescription('Preserve current Next-Registers values (0 = reset machine state, 1 = preserve)');
+
+			read(3);
+			createNode('CORE_VERSION', coreVersionValue(), 'Required core version');
+			beginDetails();
+			createDescription('Required core version, three bytes 0..15 "major", 0..15 "minor", 0..255 "subminor" version numbers. (core version is checked only when reported machine-ID is 10 = "Next", on other machine or emulator=8 the latest loaders will skip the check)');
+			lastSize = 0;
+			read(1);
+			createLine('MAJOR', decimalValue());
+			read(1);
+			createLine('MINOR', decimalValue());
+			read(1);
+			createLine('SUB_MINOR', decimalValue());
+			endDetails();
+
+
+			read(1);
+			createNode('HIRESCOL', decimalValue(), '');
+			addDescription('');
+
+			read(1);
+			createNode('ENTRYBANK', decimalValue(), '');
+			addDescription('');
+
+			read(1);
+			createNode('FILEHANDLEADDR', decimalValue(), '');
+			addDescription('');
+
+			read(1);
+			createNode('EXPBUSDISABLE', decimalValue(), '');
+			addDescription('');
 		}
 
 		/*

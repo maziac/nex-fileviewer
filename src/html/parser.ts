@@ -276,8 +276,7 @@ function hexValue(): string {
  * @returns The value from the dataBuffer as hex string + "0x" in front.
  */
 function hex0xValue(): string {
-	const val = getValue();
-	return '0x'+val.toString(16).toUpperCase();
+	return '0x'+hexValue();
 }
 
 

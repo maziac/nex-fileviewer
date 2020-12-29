@@ -88,7 +88,7 @@ function parseRoot() {
 
 	// Header
 	{
-		createNode('Header');
+		createNode('Header').open = true;
 		{
 			beginDetails();
 
@@ -102,7 +102,7 @@ function parseRoot() {
 			createNode('NUMBANKS', decimalValue(), 'Number of 16k Banks to Load: 0-112');
 
 			read(1);
-			createNode('LOADSCR', hexValue(), 'Loading-screen blocks in file');
+			createNode('LOADSCR', hex0xValue(), 'Loading-screen blocks in file');
 			const loadScrDescr = convertLineBreaks(`
 128 = no palette block, 64 = "flags 2" in V1.3 part of header define screen, 16 = Hi-Colour, 8 = Hi-Res, 4 = Lo-Res, 2 = ULA, 1 = Layer2
 
@@ -112,6 +112,7 @@ Only Layer2, Tilemap and Lo-Res screens expect the palette block (unless +128 fl
 			addDescription(loadScrDescr);
 
 			beginDetails();
+			createDescription(loadScrDescr);
 			createLine('No palette block', bitValue(7));
 			createLine('flags 2', bitValue(6));
 			createLine('Unused', bitValue(7));
@@ -121,7 +122,7 @@ Only Layer2, Tilemap and Lo-Res screens expect the palette block (unless +128 fl
 			createLine('ULA', bitValue(1));
 			createLine('Layer 2', bitValue(0));
 			//createLine('');
-			createLine(loadScrDescr);
+			//createLine(loadScrDescr);
 			endDetails();
 
 
@@ -130,8 +131,30 @@ Only Layer2, Tilemap and Lo-Res screens expect the palette block (unless +128 fl
 			addHoverValue(decimalValue());
 
 			read(2);
-			createNode('SP', hexValue(), 'Stack pointer');
+			createNode('SP', "defirire"+hex0xValue(), 'Stack pointer');
 			addHoverValue(decimalValue());
+
+			read(2);
+			createNode('PC', hex0xValue(), 'Program counter');
+			addDescription("0 = don't run, just load");
+			addHoverValue(decimalValue());
+
+			read(2);
+			createNode('NUMFILES', decimalValue(), 'Number of extra files');
+			addDescription("Obsolete");
+
+			read(112);
+			createNode('BANKS', '', 'Array of included banks');
+			let descr = 'byte flag (0/1) of 16k banks included in the file - this array is in regular order 0..111, i.e. bank5 in file will set 1 to header byte at offset 18+5 = 23, but the 16kiB of data for bank 5 are first in the file (order of bank data in file is: 5,2,0,1,3,4,6,7,8,9,10,...,111)';
+			addDescription(descr);
+			beginDetails();
+			createDescription(descr);
+			lastSize = 0;
+			for (let i = 0; i < 112; i++) {
+				read(1);
+				createLine('Bank'+i, decimalValue());
+			}
+			endDetails();
 		}
 
 		/*

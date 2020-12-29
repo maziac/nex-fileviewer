@@ -60,8 +60,8 @@ export class EditorProvider implements vscode.CustomReadonlyEditorProvider {
 		const vscodeResPath = webviewPanel.webview.asWebviewUri(resourcePath).toString();
 		mainHtml = mainHtml.replace('${vscodeResPath}', vscodeResPath);
 
-		// Add a Reload button for debugging
-		mainHtml = mainHtml.replace('<body>', '<body> <button onclick="parseRoot()">Reload</button>');
+		// Add a Reload and Copy button for debugging
+		mainHtml = mainHtml.replace('<body>', '<body><button onclick="parseRoot()">Reload</button><button onclick="copyHtmlToClipboard()">Copy HTML to clipboard</button>');
 
 		return mainHtml;
 	}

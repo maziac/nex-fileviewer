@@ -1,6 +1,7 @@
 declare var acquireVsCodeApi: any;
 declare var document: any;
 declare var window: any;
+declare var navigator: any;
 declare var ImageConvert: any;
 declare var UlaScreen: any;
 
@@ -68,8 +69,8 @@ function createNode(name: string, valString = '', shortDescription = '') {
 	//node.classList.add("basenode");
 	const html = `
 <summary>
-	<div class="offset">${lastOffset}</div>
-	<div class="size">${lastSize}</div>
+	<div class="offset" title="Offset">${lastOffset}</div>
+	<div class="size" title="Size">${lastSize}</div>
 	<div class="name">${name}</div>
 	<div class="value">${valString}</div>
 	<details class="description nomarker" >
@@ -93,6 +94,9 @@ function createNode(name: string, valString = '', shortDescription = '') {
 
 	// Append it
 	lastNode.appendChild(node);
+
+	// Return
+	return node;
 }
 
 
@@ -101,7 +105,10 @@ function createNode(name: string, valString = '', shortDescription = '') {
  * Will be shown when expanded.
  */
 function addDescription(longDescription: string) {
-	lastLongDescriptionNode.innerHTML = longDescription;
+	//lastLongDescriptionNode.innerHTML = longDescription;
+	beginDetails();
+	createDescription(longDescription);
+	endDetails();
 }
 
 
@@ -152,6 +159,24 @@ function createLine(a: string, b?: string) {
 		// Just one element
 		node.innerHTML = a;
 	}
+	// Append it
+	lastNode.appendChild(node);
+}
+
+
+
+/**
+ * Creates a description line of contents.
+ * Is gray.
+ * @param a
+ */
+function createDescription(descr: string) {
+	// Create new node
+	const node = document.createElement("DIV");
+	// Add description
+	node.innerHTML = descr;
+	// Apply style gray
+	node.classList.add('gray');
 	// Append it
 	lastNode.appendChild(node);
 }
@@ -242,7 +267,17 @@ function decimalValue(): string {
  */
 function hexValue(): string {
 	const val = getValue();
-	return val.toString(16).toUpperCase();
+	let s = val.toString(16).toUpperCase();
+	s = s.padStart(lastSize * 2, '0');
+	return s;
+}
+
+/**
+ * @returns The value from the dataBuffer as hex string + "0x" in front.
+ */
+function hex0xValue(): string {
+	const val = getValue();
+	return '0x'+val.toString(16).toUpperCase();
 }
 
 
@@ -384,6 +419,14 @@ function htmlDetails(title: string, size: number, func?: () => void) {
 }
 
 
+
+/**
+ * Copies the complete html of the document to the clipboard.
+ */
+function copyHtmlToClipboard() {
+	const copyText = document.documentElement.innerHTML;
+	navigator.clipboard.writeText(copyText);
+}
 
 
 //---- Handle messages from vscode extension --------

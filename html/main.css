@@ -35,34 +35,35 @@
 
 /* Indent */
 .indent {
-	padding-left: 3em;
+	padding-left: 2em;
 }
 
 /* Class for the offset */
 .offset {
-	width: 2em;
+	min-width: 2em;
 }
 
 /* Class for the size */
 .size {
-	width: 2em;
+	min-width: 2em;
 }
 
 /* Class for the name */
 .name {
-	width: 7em;
+	min-width: 7em;
 	font-weight: bold;
 }
 
 /* Class for the value */
 .value {
 	font-weight: bold;
-    width: 3em;
+    min-width: 3em;
 }
 
 /* Class for the description */
 .description {
-	width: 100%;
+	padding-left: 0.5em;
+	width: auto;
 }
 
 
@@ -90,8 +91,10 @@ summary {
 }
 summary > div {
 	padding: 0.25em;
+	padding-left: 0;
+	padding-right: 0.5em;
 }
 summary::-webkit-details-marker {
 	padding-top: 0.5em;
-	padding-left: 1em;
+	padding-left: 0;
 }

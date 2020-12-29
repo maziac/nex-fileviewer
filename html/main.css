@@ -4,43 +4,94 @@
     font-size: var(--vscode-editor-font-size);
 }
 
-.indent {
-	padding-left: 1em;
-}
 
-.mem_index {
-    color: var(--vscode-editorLineNumber-foreground);
-}
-
+/* Makes content gray. */
 .gray {
     color: var(--vscode-editorLineNumber-foreground);
 }
 
-.simple_value {
-	display: table-row;
-}
 
-.simple_value div {
-	display: table-cell;
-}
-
-.simple_value_title {
-	font-weight: bold;
-}
-
-
-.mem_dump {
-	display: table-row;
-}
-
-.mem_dump_cell {
-	display: table-cell;
-	padding-left: 0.25em;
-}
-
+/* class attached to errors for highlighting. */
 .error {
 	color: red;
 	font-weight: bold;
 }
 
 
+
+
+/* The class for detailed content. I.e. when expanded. */
+.content {
+	display: table-row;
+}
+
+/* Class for the divs inside the details. */
+.content div {
+	display: table-cell;
+	padding: 0.25em;
+}
+
+
+
+/* Indent */
+.indent {
+	padding-left: 3em;
+}
+
+/* Class for the offset */
+.offset {
+	width: 2em;
+}
+
+/* Class for the size */
+.size {
+	width: 2em;
+}
+
+/* Class for the name */
+.name {
+	width: 7em;
+	font-weight: bold;
+}
+
+/* Class for the value */
+.value {
+	font-weight: bold;
+    width: 3em;
+}
+
+/* Class for the description */
+.description {
+	width: 100%;
+}
+
+
+/* Expanded content of a memroy dump. */
+.content_mem_dump {
+	display: table-row;
+}
+
+/* The offset inside a memory dump. */
+.mem_offset {
+    color: var(--vscode-editorLineNumber-foreground);
+}
+
+/* One mem dump byte. */
+.mem_byte {
+	display: table-cell;
+	padding-left: 0.25em;
+}
+
+
+/* Align all summary elements. */
+summary {
+  display: flex;
+  align-items: top;
+}
+summary > div {
+	padding: 0.25em;
+}
+summary::-webkit-details-marker {
+	padding-top: 0.5em;
+	padding-left: 1em;
+}

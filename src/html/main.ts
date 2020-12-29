@@ -5,8 +5,8 @@ declare var ImageConvert: any;
 declare var UlaScreen: any;
 
 declare var dataBuffer: number[];
-declare var dataIndex: number;
-declare var parseNode: any;
+declare var lastOffset: number;
+declare var lastNode: any;
 
 
 
@@ -36,37 +36,108 @@ function htmlUlaScreen() {
 	// Image
 	try {
 		// Check size
-		if (dataIndex + UlaScreen.SCREEN_SIZE > dataBuffer.length)
+		if (lastOffset + UlaScreen.SCREEN_SIZE > dataBuffer.length)
 			throw Error();
 		// Convert image
-		const ulaScreen = new UlaScreen(dataBuffer, dataIndex);
+		const ulaScreen = new UlaScreen(dataBuffer, lastOffset);
 		const imgBuffer = ulaScreen.getUlaScreen();
 		// Create gif
 		const base64String = arrayBufferToBase64(imgBuffer);
 		// Add to html
-		parseNode.innerHTML += '<img width="500px" src="data:image/gif;base64,' + base64String + '">';
+		lastNode.innerHTML += '<img width="500px" src="data:image/gif;base64,' + base64String + '">';
 	}
 	catch {
-		parseNode.innerHTML += '<div class="error">Error converting image.</div>';
+		lastNode.innerHTML += '<div class="error">Error converting image.</div>';
 	}
 }
 
 
+/**
+ * Return a ZX color value.
+ */
+function zxColorValue() {
+	const val = getValue();
+	switch (val) {
+		case 0: return "BLACK";
+		case 0: return "BLUE";
+		case 0: return "RED";
+		case 0: return "MAGENTA";
+		case 0: return "GREEN";
+		case 0: return "CYAN";
+		case 0: return "YELLOW";
+		case 0: return "WHITE";
+	}
+	return "UNKNOWN";
+}
+
+
+
 //---- Parse the data (root level) --------
 function parseRoot() {
-	parseNode = document.getElementById("div_root");
+	lastNode = document.getElementById("div_root");
+
+	const htmlContent = lastNode.innerHTML;
 
 	// Meta info
 	let html = '<div>ZX NEX File.</div>';
 	const length = dataBuffer.length;
 	html += '<div><b>Length:</b> ' + length + '</div>';
 	html += '<br>';
-	parseNode.innerHTML = html;
+	lastNode.innerHTML = html;
 	// End of meta info
 
 	// Header
 	{
-		parseNode = htmlDetails("Header", 0);	// 0 = do not advance the index
+		createNode('Header');
+		{
+			beginDetails();
+
+			read(4);
+			createNode('Next', stringValue());
+
+			read(4);
+			createNode('Version', stringValue());
+
+			read(1);
+			createNode('NUMBANKS', decimalValue(), 'Number of 16k Banks to Load: 0-112');
+
+			read(1);
+			createNode('LOADSCR', hexValue(), 'Loading-screen blocks in file');
+			const loadScrDescr = convertLineBreaks(`
+128 = no palette block, 64 = "flags 2" in V1.3 part of header define screen, 16 = Hi-Colour, 8 = Hi-Res, 4 = Lo-Res, 2 = ULA, 1 = Layer2
+
+The loader does use common banks to load the graphics into, and show it from, i.e. bank5 for all ULA related modes and banks 9,10 and 11 for Layer2 graphics (loading these banks afterwards as regular bank will thus replace the shown data on screen).
+
+Only Layer2, Tilemap and Lo-Res screens expect the palette block (unless +128 flag set). While one can include multiple screen data in single file (setting up all relevant bits), the recommended/expected usage is to have only one type of screen in NEX file.`);
+			addDescription(loadScrDescr);
+
+			beginDetails();
+			createLine('No palette block', bitValue(7));
+			createLine('flags 2', bitValue(6));
+			createLine('Unused', bitValue(7));
+			createLine('Hi-Colour', bitValue(4));
+			createLine('Hi-Res', bitValue(3));
+			createLine('Lo-Res', bitValue(2));
+			createLine('ULA', bitValue(1));
+			createLine('Layer 2', bitValue(0));
+			//createLine('');
+			createLine(loadScrDescr);
+			endDetails();
+
+
+			read(1);
+			createNode('BORDERCOL', zxColorValue(), 'Border Color: 0-7');
+			addHoverValue(decimalValue());
+
+			read(2);
+			createNode('SP', hexValue(), 'Stack pointer');
+			addHoverValue(decimalValue());
+		}
+
+		/*
+		lastNode = htmlDetails("Header");
+
+
 		// Read all header info directly.
 		htmlString('NEXT', 4);
 		htmlString('Version', 4);
@@ -86,7 +157,7 @@ function parseRoot() {
 
 
 		readValue(1);
-		htmlData('NUMBANKS', decimalValue());
+		createNode('NUMBANKS', decimalValue());
 		addHoverTitle('Number of 16k Banks to Load: 0-112');
 
 		readValue(1);
@@ -137,9 +208,10 @@ Only Layer2, Tilemap and Lo-Res screens expect the palette block (unless +128 fl
 		html('EXPBUSDISABLE');
 */
 
+		/*
 		htmlMemDump(512);
 		// Restore parseNode
-		parseNode = parseNode.parentNode;
+		lastNode = lastNode.parentNode;
 	}
 
 
@@ -198,14 +270,14 @@ Only Layer2, Tilemap and Lo-Res screens expect the palette block (unless +128 fl
 	// ZX48K
 	const mem4000 =
 	htmlDetails("4000-7FFF", 0x4000, () => {
-		const index = dataIndex;	// Save
+		const index = lastOffset;	// Save
 		// Details as picture
 		const screen =
 		htmlDetails("Screen", 0x4000, () => {
 			htmlUlaScreen();
 		});
 		// Details as mem dump
-		dataIndex = index;	// Restore
+		lastOffset = index;	// Restore
 		htmlDetails("Memory Dump", 0x4000, () => {
 			htmlMemDump(0x4000, 0x4000);
 		});
@@ -221,5 +293,7 @@ Only Layer2, Tilemap and Lo-Res screens expect the palette block (unless +128 fl
 
 	// Open the loading screen
 	mem4000.open = true;
+*/
+	}
 }
 

@@ -123,13 +123,14 @@ function parseRoot() {
 			createNode('NEXT', stringValue());
 
 			read(4);
-			createNode('VERSION', stringValue());
+			const version = stringValue();
+			createNode('VERSION', version);
 
 			read(1);
 			createNode('NUM_BANKS', decimalValue(), 'Number of 16k Banks to Load: 0-112');
 
 			read(1);
-			createNode('LOAD_SCREENS', hex0xValue(), 'Loading-screen blocks in file');
+			createNode('LOAD_SCREENS', bitsValue(), 'Loading-screen blocks in file');
 			const loadScrDescr = convertLineBreaks(`
 128 = no palette block, 64 = "flags 2" in V1.3 part of header define screen, 16 = Hi-Colour, 8 = Hi-Res, 4 = Lo-Res, 2 = ULA, 1 = Layer2
 
@@ -140,14 +141,14 @@ Only Layer2, Tilemap and Lo-Res screens expect the palette block (unless +128 fl
 
 			beginDetails();
 			createDescription(loadScrDescr);
-			createLine('No palette block', bitValue(7));
-			createLine('flags 2', bitValue(6));
-			createLine('Unused', bitValue(7));
-			createLine('Hi-Colour', bitValue(4));
-			createLine('Hi-Res', bitValue(3));
-			createLine('Lo-Res', bitValue(2));
-			createLine('ULA', bitValue(1));
-			createLine('Layer 2', bitValue(0));
+			createNode('No palette block', bitValue(7), 'Bit 7');
+			createNode('flags 2', bitValue(6), 'Bit 6');
+			createNode('Unused', bitValue(7), 'Bit 5');
+			createNode('Hi-Colour', bitValue(4), 'Bit 4');
+			createNode('Hi-Res', bitValue(3), 'Bit 3');
+			createNode('Lo-Res', bitValue(2), 'Bit 2');
+			createNode('ULA', bitValue(1), 'Bit 1');
+			createNode('Layer 2', bitValue(0), 'Bit 0');
 			//createLine('');
 			//createLine(loadScrDescr);
 			endDetails();
@@ -209,29 +210,81 @@ Only Layer2, Tilemap and Lo-Res screens expect the palette block (unless +128 fl
 			createDescription('Required core version, three bytes 0..15 "major", 0..15 "minor", 0..255 "subminor" version numbers. (core version is checked only when reported machine-ID is 10 = "Next", on other machine or emulator=8 the latest loaders will skip the check)');
 			lastSize = 0;
 			read(1);
-			createLine('MAJOR', decimalValue());
+			createNode('MAJOR', decimalValue());
 			read(1);
-			createLine('MINOR', decimalValue());
+			createNode('MINOR', decimalValue());
 			read(1);
-			createLine('SUB_MINOR', decimalValue());
+			createNode('SUB_MINOR', decimalValue());
 			endDetails();
 
 
 			read(1);
-			createNode('HIRESCOL', decimalValue(), '');
-			addDescription('');
+			createNode('HIRES_COLOR', bitsValue(), 'Timex HiRes 512x192 mode color');
+			addDescription(`Timex HiRes 512x192 mode color, encoded as for port 255 = bits 5-3. I.e. values 0, 8, 16, .., 56 (0..7 * 8)
+When screens 320x256x8 or 640x256x4 are used, this byte is re-used as palette offset for Layer 2 mode, values 0..15`);
 
 			read(1);
-			createNode('ENTRYBANK', decimalValue(), '');
-			addDescription('');
+			createNode('ENTRY_BANK', decimalValue(), 'Bank to be mapped into slot 3');
+			addDescription('Entry bank = bank to be mapped into slot 3 (0xC000..0xFFFF address space), the "Program Counter" (header offset +14) and "File handle address" (header offset +140) are used by NEX loader after the mapping is set (The default ZX128 has bank 0 mapped after reset, which makes zero value nice default).');
 
-			read(1);
-			createNode('FILEHANDLEADDR', decimalValue(), '');
-			addDescription('');
+			read(2);
+			createNode('FILE_HANDLE_ADDR', hexValue(), 'File handle address');
+			addDescription('0 = NEX file is closed by the loader, 1..0x3FFF values (1 recommended) = NEX loader keeps NEX file open and does pass the file handle in BC register, 0x4000..0xFFFF values (for 0xC000..0xFFFF see also "Entry bank") = NEX loader keeps NEX file open and the file handle is written into memory at the desired address.');
+			addHoverValue(decimalValue());
+			// End of version 1.2 header
 
-			read(1);
-			createNode('EXPBUSDISABLE', decimalValue(), '');
-			addDescription('');
+			if (version >= "V1.2") {
+				read(1);
+				createNode('EXPBUS_ENABLE', decimalValue(), 'Enable Expansion Bus');
+				addDescription('0 = disable Expansion Bus by setting top four bits of Expansion Bus Enable Register ($80) to 0, 1 = do nothing (does apply only to cores 3.0.5+)');
+
+				read(1);
+				createNode('HAS_CHECKSUM', decimalValue());
+				addDescription('1 = Has checksum value, checksum algorithm is CRC-32C (Castagnoli), value itself is at the very end of the header block');
+
+				read(4);
+				createNode('BANKS_OFFSET', hexValue(), 'File offset of first bank data');
+				addDescription('File offset of first bank data (when loader is parsing known version, it should know where the banks start without this value, but it may use it for extra check whether the parsing of optional blocks between header and first bank was done correctly for files V1.3+, or it may even try to partially-load unknown future versions of NEX files by skipping unknown blocks between header and banks data, although that may lead to unexpected state for the app)');
+				addHoverValue(decimalValue());
+
+				read(2);
+				createNode('CLI_BUFFER_ADDR', decimalValue(), 'CLI buffer address');
+				addDescription('CLI buffer address (after "Entry bank" is paged in), 0 = no buffer');
+
+				read(2);
+				createNode('CLI_BUFFER_SIZE', decimalValue(), 'CLI buffer size');
+				addDescription('When address and size are provided, the original argument line passed to NEX loader will be copied to defined buffer (and truncated to "size", shorter string may be zero/colon/enter terminated as any other BASIC line) and register DE is set to the buffer address. The maximum size is 2048 bytes (longer lines can be probably salvaged from Bank 5 memory if the NEX file is not loading that bank and the app code search for the original line on its own).');
+
+				read(1);
+				createNode('LOAD_SCREENS_2', decimalValue(), 'Loading screen flags 2 ');
+				addDescription(`When first flag has bit6 +64 set (+128 no-palette is valid for new cases too, other old bits should be NOT mixed with new modes):
+1 = Layer 2 320x256x8bpp, blocks: [512B palette +] 81920B data
+2 = Layer 2 640x256x4bpp, blocks: [512B palette +] 81920B data
+ (HiRes color value 0..15 is used as L2 palette offset - does apply to two new Layer 2 modes)
+ For Layer 2 banks 9,10,11,12,13 are used to display the loading screen.
+3 = Tilemode screen, block: [512B palette] (plus four configuration bytes in header at offset 154)
+ Tilemap data are stored in regular (!) bank 5 - no specialized data block is used.`);
+
+				read(1);
+				createNode('HAS_COPPER_CODE', decimalValue(), 'Inclusion of copper code');
+				addDescription('1 = Has copper code block, extra 2048B block after last screen data block, which will be set to Copper and the copper will be started with %01 control code (reset CPC to 0, and start). This can be used for example as "loading screen animation" feature (be aware the timing of load may vary greatly).');
+
+				read(4);
+				createNode('TILE_SCR_CONFIG', decimalValue(), 'Tilemode screen configuration');
+				addDescription('When Tilemode screen: four bytes array, values to set NextRegs: $6B, $6C, $6E, $6F');
+
+				read(1);
+				createNode('BIG_L2_BAR_POSY', decimalValue(), 'Loading bar y position');
+				addDescription('When Layer 2 320x256 or 640x256 screen + loading bar: loading bar Y position (bar is 2px tall, so 254 is very bottom)');
+
+				read(349);
+				createNode('RESERVED');
+				addDescription('Reserved for future extensions, set to zero in older versions of file format.');
+
+				read(4);
+				createNode('CRC32C', decimalValue(), 'Optional checksum');
+				addDescription('Optional CRC-32C (Castagnoli) - is calculated by checksumming (initial value is zero) file content from offset 512 (after this field) till end of file, including the optional custom binary appended after regular NEX file. And then continuing with checksumming the first 508 bytes of the header (stopping ahead of this field). This is intended for PC tools working with NEX files, or extra check tool running on Next, but not for regular loading of NEX files (value is stored as "uint32_t" in little-endian way).');
+			}
 		}
 
 		/*

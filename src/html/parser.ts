@@ -109,7 +109,7 @@ function createNode(name: string, valString = '', shortDescription = '') {
 function addDescription(longDescription: string) {
 	//lastLongDescriptionNode.innerHTML = longDescription;
 	beginDetails();
-	createDescription(longDescription);
+	createDescription(convertLineBreaks(longDescription));
 	endDetails();
 }
 
@@ -178,7 +178,7 @@ function createDescription(descr: string) {
 	// Create new node
 	const node = document.createElement("DIV");
 	// Add description
-	node.innerHTML = descr;
+	node.innerHTML = convertLineBreaks(descr);
 	// Apply style gray
 	node.classList.add('gray');
 	// Append it
@@ -294,6 +294,17 @@ function bitValue(bit: number): string {
 	return result;
 }
 
+
+/**
+ * @returns The value from the dataBuffer as bit string. e.g. "0011_0101"
+ */
+function bitsValue(): string {
+	const val = getValue();
+	let s = val.toString(2);
+	s = s.padStart(lastSize * 8, '0');
+	s = s.replace(/.{4}/, '$&_');
+	return s;
+}
 
 /**
  * Reads a text of given size.

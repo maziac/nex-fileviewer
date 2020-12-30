@@ -282,7 +282,7 @@ When screens 320x256x8 or 640x256x4 are used, this byte is re-used as palette of
 				addDescription('Reserved for future extensions, set to zero in older versions of file format.');
 				addDelayedParsing(() => {
 					read(349);
-					htmlMemDump();
+					createMemDump();
 				});
 
 				read(4);

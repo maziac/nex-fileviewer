@@ -354,8 +354,9 @@ function stringValue(): string {
  * Is called if the user opens the details of an item.
  * Decodes the data.
  * @param displayOffset The displayOffset is added to the index before displaying.
+ * @param hoverRelativeOffset You can replace the default relative Offset hover text.
  */
-function htmlMemDump(displayOffset = 0, hoverRelativeOffset = 'Relative Offset') {
+function createMemDump(displayOffset = 0, hoverRelativeOffset = 'Relative Offset') {
 	let html = '';
 	let prevClose = '';
 
@@ -383,7 +384,6 @@ function htmlMemDump(displayOffset = 0, hoverRelativeOffset = 'Relative Offset')
 				for (; l < lastSize; l++) {
 					if (val != dataBuffer[lastOffset + l])
 						break;
-					break;
 				}
 				const l16 = l - (l % 16);
 				if (l16 > i + 16) {
@@ -394,11 +394,14 @@ function htmlMemDump(displayOffset = 0, hoverRelativeOffset = 'Relative Offset')
 						i = l16 - 1;
 					const iRelOffsetHexEnd = getHexString(displayOffset + i, 4);
 
-					const hoverText = 'Offset (hex): ' + getHexString(iOffset, 4) + '-' + getHexString(lastOffset + i, 4) + '\nOffset (dec): ' + iOffset + '-' + (lastOffset + i) + '\nRelative offset (hex): ' + iRelOffsetHex + '-' + iRelOffsetHexEnd + '\nRelative offset (dec): ' + iRelOffset + '-' + (displayOffset + i) + '\nValue (dec): ' + valIntString;
+					const hoverTextOffset = 'Offset (hex): ' + getHexString(iOffset, 4) + '-' + getHexString(lastOffset + i, 4) + '\nValue (dec): ' + valIntString;
 
-					html += '<div title="'+hoverText+'">';
-					html += '<span class="indent mem_offset">' + iOffset + '-' + (lastOffset + i) + ' (0x' + iRelOffsetHex + '-0x' + iRelOffsetHexEnd + '):</span>';
-					html += '<span> contain all ' + valString + '</span>';
+					const hoverTextRelOffset = 'Relative offset (dec): ' + iRelOffset + '-' + (displayOffset + i) + '\nValue (dec): ' + valIntString;
+
+					html += '<div>';
+					html += '<span class="indent mem_offset" title="' + hoverTextOffset + '">' + iOffset + '-' + (lastOffset + i) + '</span>';
+					html += '<span class="mem_offset" title="' + hoverTextRelOffset +'"> (0x' + iRelOffsetHex + '-0x' + iRelOffsetHexEnd + '): </span>';
+					html += '<span title="Value (dec): '+valIntString+'"> contain all ' + valString + '</span>';
 					continue;
 				}
 

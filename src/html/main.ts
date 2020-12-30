@@ -239,26 +239,63 @@ When screens 320x256x8 or 640x256x4 are used, this byte is re-used as palette of
 	}
 
 
-	// Optional Palette
+	// Palette
 	if (!(loadScreens & 0b1000_0000)	// Has no-palette not set
 		&& (loadScreens & 0b0100_0101))	// Layer2, LORES or LOADSCR2 is set
 	{
 		read(512);
 		createNode('Palette');
 		addDetailsParsing(() => {
-			createDescription('Optional palette (for Layer2, LoRes or Tilemap screen).');
+			createDescription('Optional palette (for Layer2, LoRes or Tilemap screen).\nPalette consists of 512 bytes (256 palette items from index 0), in 9b colour format: first byte is RRRG_GGBB, second byte is P000_000B (P is priority flag for Layer 2 colours).');
 			read(512);
 			createNode('Decoded palette');
 			addDelayedDetailsParsing(() => {
 				read(512);
 				createPalette();
 			});
-			createNode('Same as raw data');
+			createNode('Same palette as raw data');
 			addDelayedDetailsParsing(() => {
 				read(512);
 				createMemDump();
 			});
 		});
 	}
+
+	// Layer 2 loading screen
+	if (loadScreens & 0b0000_0001) {
+		read(49152);
+		createNode('LAYER2_LOAD_SCREEN', '', 'Layer 2 loading screen');
+		addDetailsParsing(() => {
+			createDescription('Optional palette (for Layer2, LoRes or Tilemap screen).\nPalette consists of 512 bytes (256 palette items from index 0), in 9b colour format: first byte is RRRG_GGBB, second byte is P000_000B (P is priority flag for Layer 2 colours).');
+			read(512);
+			createNode('Decoded palette');
+			addDelayedDetailsParsing(() => {
+				read(512);
+				createPalette();
+			});
+			createNode('Same palette as raw data');
+			addDelayedDetailsParsing(() => {
+				read(512);
+				createMemDump();
+			});
+		});
+	}
+
+
+	// ULA loading screen
+	if (loadScreens & 0b0000_0010) {
+		read(6912);
+		createNode('ULA_LOAD_SCREEN', '', 'Classic ULA loading screen');
+		addDetailsParsing(() => {
+			read(6912);
+			htmlUlaScreen();
+			createNode('Memory dump');
+			addDelayedDetailsParsing(() => {
+				read(6912);
+				createMemDump();
+			});
+		});
+	}
+
 }
 

@@ -110,21 +110,31 @@ function createPalette() {
 			// Decode to RGB
 			const red = val0 >> 5;
 			const green = (val0 >> 2) & 0b111;
-			const blue = (val0 & 0b11) + ((val1 & 0b1) << 2);
+			const blue = ((val0 << 1) & 0b110) + (val1 & 0b1);
 			const priority = val1 >> 7;
 
 			// Start of row
 			const iOffsetHex = getHexString(iOffset, 4);
+			const val = 256 * val1 + val0;
+			const bitsString = convertBitsToString(val, 2);
 			html += `<div class="mem_dump">
 					<div class="indent mem_offset" title = "Offset\nHex: ${iOffsetHex}">${iOffset}</div>
 				<div class="mem_rel_offset"> [${iRelOffset}]</div>`;
 
+			// Hex values
+			const valHex = getHexString(val, 4);
+			const hoverText = 'Bin: P000_000B_RRRG_GGBB = ' + bitsString;
+			html += '<div class="mem_byte" title="' + hoverText + '">0x' + valHex + ':</div>';
+
 			// RGB values
-			const bitsString = convertBitsToString(256 * val1 + val0, 2);
-			html += '<div class="mem_byte" title="RED\nP000_000B_RRGG_GBB:\n' + bitsString + '">' + red + '</div>';
-			html += '<div class="mem_byte" title="GREEN\nP000_000B_RRGG_GBB:\n' + bitsString + '">' + red + '</div>';
-			html += '<div class="mem_byte" title="BLUE\nP000_000B_RRGG_GBB:\n' + bitsString + '">' + red + '</div>';
-			html += '<div class="mem_byte" title="Priority\nP000_000B_RRGG_GBB:\n' + bitsString + '">' + priority + '</div>';
+			html += '<div class="mem_byte">R=' + red + ',</div>';
+			html += '<div class="mem_byte">G=' + green + ',</div>';
+			html += '<div class="mem_byte">B=' + blue + ',</div>';
+			html += '<div class="mem_byte">P=' + priority + '</div>';
+
+			// As color
+			const colorHex = getHexString(red * 32, 2) + getHexString(green * 32, 2) + getHexString(blue * 32, 2)
+			html += '<div class="mem_byte" style="background:#'+colorHex+'" title="#'+colorHex+'">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>';
 
 			// Close
 			html += '</div>';

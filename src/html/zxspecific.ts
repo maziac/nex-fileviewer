@@ -21,7 +21,7 @@ function getMemBankPermutation(i: number): number {
  * Is called if the user opens the details of for the ULA screen.
  * Decodes the image data
  */
-function htmlUlaScreen() {
+function createUlaScreen() {
 	// Image
 	try {
 		// Check size
@@ -90,6 +90,58 @@ function banksValue(): string {
 
 
 /**
+ * Reads the palette and returns a number array.
+ * @return an array in the from R, G, B, R, G, B, ... R, G, B
+ */
+function getPalette(): number[] {
+	// Convert palette
+	const palette = new Array<number>(3 * 256);
+	for (let i = 0; i < lastSize / 2; i++) {
+		// Get value
+		const iOffset = lastOffset + 2 * i;	// For indexing
+		const val0 = dataBuffer[iOffset];
+		const val1 = dataBuffer[iOffset + 1];
+		// Decode to RGB
+		const red = (val0 >> 5) * 32;
+		const green = ((val0 >> 2) & 0b111) * 32;
+		const blue = (((val0 << 1) & 0b110) + (val1 & 0b1)) * 32;
+		// Put into palette
+		const k = 3 * i;
+		palette[k] = red;
+		palette[k + 1] = green;
+		palette[k + 2] = blue;
+	}
+	return palette;
+}
+
+
+/**
+ * Returns the ZX NExt default palette.
+ * @return an array in the from R, G, B, R, G, B, ... R, G, B
+ */
+function getZxNextDefaultPalette(): number[] {
+	// Create palette
+	const palette = new Array<number>(3 * 256);
+	for (let i = 0; i < 256; i++) {
+		// Get value
+		const iOffset = lastOffset + 2 * i;	// For indexing
+		const val0 = dataBuffer[iOffset];
+		const val1 = dataBuffer[iOffset + 1];
+		// Decode to RGB
+		const red = (i >> 5) * 32;
+		const green = ((i >> 2) & 0b111) * 32;
+		const blue = ((i << 1) & 0b110) * 32;
+		// Put into palette
+		const k = 3 * i;
+		palette[k] = red;
+		palette[k + 1] = green;
+		palette[k + 2] = blue;
+	}
+	return palette;
+}
+
+
+/**
  * Creates a palette from dataBuffer.
  * 512 bytes are converted to 256 palette entries each in the format:
  * RRRGGGBB  P000000B
@@ -151,6 +203,7 @@ function createPalette() {
 	lastNode.innerHTML += html;
 }
 
+
 /**
  * Creates a palette image from the dataBuffer (512 bytes).
  */
@@ -162,22 +215,7 @@ function createPaletteImage() {
 		for (let i = 0; i < 256; i++)
 			pixels[i] = i;
 		// Convert palette
-		const palette = new Array<number>(3 * 256);
-		for (let i = 0; i < 256; i++) {
-			// Get value
-			const iOffset = lastOffset + 2*i;	// For indexing
-			const val0 = dataBuffer[iOffset];
-			const val1 = dataBuffer[iOffset + 1];
-			// Decode to RGB
-			const red = (val0 >> 5) * 32;
-			const green = ((val0 >> 2) & 0b111) * 32;
-			const blue = (((val0 << 1) & 0b110) + (val1 & 0b1)) * 32;
-			// Put into palette
-			const k = 3 * i;
-			palette[k] = red;
-			palette[k + 1] = green;
-			palette[k + 2] = blue;
-		}
+		const palette = getPalette();
 		// Create image. 1 pixel per palette entry.
 		const gifBuffer = ImageConvert.createGifFromArray(16, 16, pixels, palette);
 		const base64String = arrayBufferToBase64(gifBuffer);
@@ -191,13 +229,37 @@ function createPaletteImage() {
 		for (let y = 0; y < 16; y++) {
 			for (let x = 0; x < 16; x++) {
 				const k = i * 3;
-				const hoverText = `Index: ${i}\nR=${palette[k]}\nG=${palette[k+1]}\nB=${palette[k+2]}`;
+				const hoverText = `Index: ${i}\nR=${palette[k]/32}\nG=${palette[k+1]/32}\nB=${palette[k+2]/32}`;
 				html += '<area title="' + hoverText + '" shape="rect" coords="' + x * partSize + ',' + y * partSize + ',' + (x + 1) * partSize + ',' + (y + 1) * partSize + '">';
 				i++;
 			}
 		}
 		html += '</map>';
 		lastNode.innerHTML += html;
+	}
+	catch {
+		lastNode.innerHTML += '<div class="error">Error converting image.</div>';
+	}
+}
+
+
+/**
+ * Is called if the user opens the details of for the Layer2 screen.
+ * Decodes the image data
+ */
+function createLayer2Screen(palette: number[]) {
+	// Image
+	try {
+		// Check size
+		if (lastOffset + 49152 > dataBuffer.length)
+			throw Error();
+		// Get image data
+		const pixels = dataBuffer.slice(lastOffset, lastOffset + lastSize);
+		// Convert image
+		const gifBuffer = ImageConvert.createGifFromArray(16, 16, pixels, palette);
+		const base64String = arrayBufferToBase64(gifBuffer);
+		// Add to html
+		lastNode.innerHTML += '<img class="load_screen" style="image-rendering:pixelated" src="data:image/gif;base64,' + base64String + '">';
 	}
 	catch {
 		lastNode.innerHTML += '<div class="error">Error converting image.</div>';

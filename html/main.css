@@ -119,3 +119,7 @@ summary::-webkit-details-marker {
 	color: transparent;
 }
 
+.load_screen {
+	width: 500px;
+}
+

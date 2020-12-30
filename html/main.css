@@ -4,6 +4,13 @@
     font-size: var(--vscode-editor-font-size);
 }
 
+title {
+	font-weight: bold;
+}
+
+a.tip {
+	font-weight: bold;
+}
 
 /* Makes content gray. */
 .gray {

@@ -47,6 +47,18 @@ var lastLongDescriptionNode: any;
 
 
 /**
+ * Call to check a value.
+ * Does nothing.
+ * You can set a breakpoint here.
+ */
+function assert(condition: boolean) {
+	if (!condition) {
+		console.log("Error!");
+	}
+}
+
+
+/**
  * Convert array to base 64 string.
  */
 function arrayBufferToBase64(buffer) {
@@ -147,13 +159,31 @@ function endDetails() {
 
 
 /**
- * Installs a listener for the toggle event.
- * The parsing of the data si delayed until toggling.
- * @param func The fundtion to call to parse/decode the data.
+ * Parses the details of an object.
+ * Parsing is done immediately.
+ * Uses begin/endDetails.
+ * @param func The function to call to parse/decode the data.
  */
-function addDelayedParsing(func: () => void) {
+function addDetailsParsing(func: () => void) {
+	// "Indent"
+	beginDetails();
+	// Call function
+	lastSize = 0;
+	func();
+	// Close/leave
+	endDetails();
+}
+
+
+/**
+ * Installs a listener for the toggle event.
+ * The parsing of the data is delayed until toggling.
+ * @param func The function to call to parse/decode the data.
+ */
+function addDelayedDetailsParsing(func: () => void) {
 	// Get node
 	const detailsNode = lastNode.lastChild;
+	detailsNode.classList.remove("nomarker");
 	// Attach attribute
 	detailsNode.setAttribute('data-index', lastOffset.toString());
 	// Install listener
@@ -323,14 +353,26 @@ function bitValue(bit: number): string {
 
 
 /**
+ * Converts a value into a bit string.
+ * @param value The value to convert.
+ * @param size The size of the value, e.g. 1 byte o r 2 bytes.
+ * @returns The value from the dataBuffer as bit string. e.g. "0011_0101"
+ */
+function convertBitsToString(value: number, size: number): string {
+	let s = value.toString(2);
+	s = s.padStart(size * 8, '0');
+	s = s.replace(/.{4}/g, '$&_');
+	// Remove last '_'
+	s = s.substr(0, s.length - 1);
+	return s;
+}
+
+/**
  * @returns The value from the dataBuffer as bit string. e.g. "0011_0101"
  */
 function bitsValue(): string {
 	const val = getValue();
-	let s = val.toString(2);
-	s = s.padStart(lastSize * 8, '0');
-	s = s.replace(/.{4}/, '$&_');
-	return s;
+	return convertBitsToString(val, lastSize);
 }
 
 /**
@@ -345,9 +387,6 @@ function stringValue(): string {
 	}
 	return s;
 }
-
-
-
 
 
 /**

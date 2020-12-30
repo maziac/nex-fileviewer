@@ -248,15 +248,11 @@ When screens 320x256x8 or 640x256x4 are used, this byte is re-used as palette of
 		addDetailsParsing(() => {
 			createDescription('Optional palette (for Layer2, LoRes or Tilemap screen).\nPalette consists of 512 bytes (256 palette items from index 0), in 9b colour format: first byte is RRRG_GGBB, second byte is P000_000B (P is priority flag for Layer 2 colours).');
 			read(512);
-			createNode('Decoded palette');
+			createPaletteImage();
+			createNode('As index array');
 			addDelayedDetailsParsing(() => {
 				read(512);
 				createPalette();
-			});
-			createNode('Same palette as raw data');
-			addDelayedDetailsParsing(() => {
-				read(512);
-				createMemDump();
 			});
 		});
 	}

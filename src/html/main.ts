@@ -35,6 +35,7 @@ function parseRoot() {
 	try {
 		// Header
 		let loadScreens;
+		let loadScreens2;
 		let hiresColor;
 		createNode('Header').open = true;
 		{
@@ -168,7 +169,7 @@ When screens 320x256x8 or 640x256x4 are used, this byte is re-used as palette of
 			// End of version 1.2 header
 			assert(lastOffset + lastSize == 142);
 
-			if (version <= "V1.1") {
+			if (version <= "V1.2") {
 				// Version 1.0 or 1.1
 				const remaining = 512 - 142;
 				read(remaining);
@@ -203,6 +204,7 @@ When screens 320x256x8 or 640x256x4 are used, this byte is re-used as palette of
 				addDescription('When address and size are provided, the original argument line passed to NEX loader will be copied to defined buffer (and truncated to "size", shorter string may be zero/colon/enter terminated as any other BASIC line) and register DE is set to the buffer address. The maximum size is 2048 bytes (longer lines can be probably salvaged from Bank 5 memory if the NEX file is not loading that bank and the app code search for the original line on its own).');
 
 				read(1);
+				loadScreens2 = getValue();
 				createNode('LOAD_SCREENS_2', decimalValue(), 'Loading screen flags 2 ');
 				addDescription(`When first flag has bit6 +64 set (+128 no-palette is valid for new cases too, other old bits should be NOT mixed with new modes):
 1 = Layer 2 320x256x8bpp, blocks: [512B palette +] 81920B data
@@ -321,7 +323,7 @@ When screens 320x256x8 or 640x256x4 are used, this byte is re-used as palette of
 			addDetailsParsing(() => {
 				createDescription(`The Timex HiRes mode supports only 2 colors.`);
 				read(12288);
-				createTimexHiResScreen(palette);
+				createTimexHiResScreen(timexInkColor);
 				createNode('Memory dump');
 				addDelayedDetailsParsing(() => {
 					read(12288);
@@ -332,19 +334,42 @@ When screens 320x256x8 or 640x256x4 are used, this byte is re-used as palette of
 
 		// Timex HiCol loading screen
 		if (loadScreens & 0b0001_0000) {
-			const timexInkColor = (hiresColor >> 2) & 0b111;
 			read(12288);
 			createNode('HICOL_LOAD_SCREEN', '', 'Timex HiCol (8x1) loading screen');
 			addDetailsParsing(() => {
 				createDescription(`HiCol modes uses more attributes. I.e. the attribute applies to 1 byte only.`);
 				read(12288);
-				createTimexHiColScreen(palette);
+				createTimexHiColScreen();
 				createNode('Memory dump');
 				addDelayedDetailsParsing(() => {
 					read(12288);
 					createMemDump();
 				});
 			});
+		}
+
+		// Layer 2 320x256x8 or 640x256x4 loading screen
+		if (loadScreens & 0b0100_0000) {
+			// Check which screen
+			switch (loadScreens2) {
+				case 1:
+					// Layer 2 320x256x8bpp, blocks: [512B palette +] 81920B data
+					read(81920);
+					createNode('LAYER2_320_LOAD_SCREEN', '', 'Layer 2 320x256, 1 byte per pixel');
+					addDetailsParsing(() => {
+						read(81920);
+						const palOffset = hiresColor;
+						const offsPalette = createPaletteWithOffset(palette, palOffset);
+						createLayer2Screen320(offsPalette);
+						createNode('Memory dump');
+						addDelayedDetailsParsing(() => {
+							read(81920);
+							createMemDump();
+						});
+					});
+					break;
+			}
+
 		}
 
 	}

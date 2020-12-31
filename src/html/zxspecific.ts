@@ -166,6 +166,28 @@ function getZxNextDefaultPalette(): number[] {
 
 
 /**
+ * Creates a new palette from the given palette with the given offset.
+ */
+function createPaletteWithOffset(palette: number[], offset: number): number[] {
+	// Create palette
+	const offsPalette = new Array<number>(3 * 256);
+	for (let i = 0; i < 256; i++) {
+		// Get value RGB
+		const red = (i >> 5) * 32;
+		const green = ((i >> 2) & 0b111) * 32;
+		const blue = ((i << 1) & 0b110) * 32;
+		// Put into palette
+		const k = 3 * i;
+		const kOffs = 3 * ((i + offset) & 0xFF);
+		offsPalette[kOffs] = palette[k];
+		offsPalette[kOffs + 1] = palette[k + 1];
+		offsPalette[kOffs + 2] = palette[k + 2];
+	}
+	return offsPalette;
+}
+
+
+/**
  * Creates a palette from dataBuffer.
  * 512 bytes are converted to 256 palette entries each in the format:
  * RRRGGGBB  P000000B
@@ -292,7 +314,7 @@ function createUlaScreen() {
 
 /**
  * Is called if the user opens the details of for the Layer2 screen.
- * Decodes the image data
+ * Decodes the image data.
  */
 function createLayer2Screen(palette: number[]) {
 	// Image
@@ -304,6 +326,36 @@ function createLayer2Screen(palette: number[]) {
 		const pixels = dataBuffer.slice(lastOffset, lastOffset + 49152);
 		// Convert image
 		const gifBuffer = ImageConvert.createGifFromArray(256, 192, pixels, palette);
+		const base64String = arrayBufferToBase64(gifBuffer);
+		// Add to html
+		lastNode.innerHTML += '<img class="load_screen" style="image-rendering:pixelated" src="data:image/gif;base64,' + base64String + '">';
+	}
+	catch {
+		lastNode.innerHTML += '<div class="error">Error converting image.</div>';
+	}
+}
+
+/**
+ * Is called if the user opens the details of for the Layer2 screen
+ * with 320x256 pixels.
+ * Decodes the image data.
+ */
+function createLayer2Screen320(palette: number[]) {
+	// Image
+	try {
+		// Check size
+		if (lastOffset + 81920 > dataBuffer.length)
+			throw Error();
+		// Get image data. X and Y are swapped.
+		const pixels = new Array<number>(81920);
+		let index = 0;
+		for (let y = 0; y < 256; y++) {
+			for (let x = 0; x < 320; x++) {
+				pixels[index++] = dataBuffer[lastOffset + x * 256 + y];
+			}
+		}
+		// Convert image
+		const gifBuffer = ImageConvert.createGifFromArray(320, 256, pixels, palette);
 		const base64String = arrayBufferToBase64(gifBuffer);
 		// Add to html
 		lastNode.innerHTML += '<img class="load_screen" style="image-rendering:pixelated" src="data:image/gif;base64,' + base64String + '">';
@@ -346,7 +398,7 @@ function createLoResScreen(palette: number[]) {
  */
 function createTimexHiResScreen(inkColor: number) {
 	// Complement color
-	const papercolor = (~inkColor) & 0b111;
+	const paperColor = (~inkColor) & 0b111;
 	// Image
 	try {
 		// Check size
@@ -354,7 +406,7 @@ function createTimexHiResScreen(inkColor: number) {
 			throw Error();
 		// Create palette
 		const palette = new Array<number>();
-		palette.push(...zxHtmlColor(papercolor, true));
+		palette.push(...zxHtmlColor(paperColor, true));
 		palette.push(...zxHtmlColor(inkColor, true));
 		// Get image data
 		const buffer = dataBuffer.slice(lastOffset, lastOffset + 12288);
@@ -409,9 +461,7 @@ function createTimexHiResScreen(inkColor: number) {
  * Half of the buffer is used for pixel data. The other half is attribute data.
  * I.e. each byte has an own attribute.
  */
-function createTimexHiColScreen(inkColor: number) {
-	// Complement color
-	const papercolor = (~inkColor) & 0b111;
+function createTimexHiColScreen() {
 	// Image
 	try {
 		// Check size

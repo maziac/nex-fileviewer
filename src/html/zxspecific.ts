@@ -581,6 +581,33 @@ function createCopperDump() {
 			const valString = convertBitsToString(val, 2);
 			const iRelOffsetHex = getHexString(iRelOffset, 4);
 
+			// Search for more NOOPs
+			if (val == 0) {
+				// NOOP
+				let k = i + 2;
+				for (; k < lastSize; k++) {
+					if (dataBuffer[lastOffset + k] != 0)
+						break;
+				}
+				const count = ((k - i) >>> 1) - 1;
+				if (count > 0) {
+					// At least 1 additional
+					const iOffsetHex = getHexString(iOffset, 4);
+					const kOffset = lastOffset + i + 2 * count;
+					const kOffsetHex = getHexString(kOffset, 4);
+					const kRelOffset = i + 2 * count;
+					const kRelOffsetHex = getHexString(kRelOffset, 4);
+					html += `<div class="mem_dump">
+				<div class="indent mem_offset" title = "Offset\nHex: ${iOffsetHex}-${kOffsetHex}">${iOffset}-${kOffset}</div>
+			<div class="mem_rel_offset" title="${hoverRelativeOffset}\nHex: ${iRelOffsetHex}-${kRelOffsetHex}">[${iRelOffset}...${kRelOffset}]:</div>`;
+					html += '<div class="mem_byte">' + valString + '</div>';
+					html += '<div class="copper_cmd">&nbsp;= All NOOP</div>';
+					// Next
+					i += 2 * count;
+					continue;
+				}
+			}
+
 			// Show offset
 			const iOffsetHex = getHexString(iOffset, 4);
 			html += `<div class="mem_dump">
@@ -589,7 +616,7 @@ function createCopperDump() {
 			`;
 
 			// Value
-			html += '<div class="mem_byte">' + valString + '&nbsp;</div>';
+			html += '<div class="mem_byte">' + valString + '</div>';
 
 			// Decoded value
 			let cmd;
@@ -613,7 +640,7 @@ function createCopperDump() {
 				const r = (val >>> 8) & 0b1111111;
 				cmd = `MOVE ${v} (0x${getHexString(v, 2)}) TO REG ${r} (0x${getHexString(r, 2)})`;
 			}
-			html += '<div class="copper_cmd">= ' + cmd + '</div>';
+			html += '<div class="copper_cmd">&nbsp;= ' + cmd + '</div>';
 
 			// Close
 			html += '</div>';

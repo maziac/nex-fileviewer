@@ -120,6 +120,10 @@ summary::-webkit-details-marker {
 }
 
 .load_screen {
-	width: 500px;
+	width: 512px;
+}
+.load_screen_hires {
+	width: 512px;
+	height: 384px;
 }
 

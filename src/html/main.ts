@@ -34,6 +34,7 @@ function parseRoot() {
 
 	try {
 		// Header
+		let hasCopperCode;
 		let loadScreens;
 		let loadScreens2;
 		let hiresColor;
@@ -215,6 +216,7 @@ When screens 320x256x8 or 640x256x4 are used, this byte is re-used as palette of
  Tilemap data are stored in regular (!) bank 5 - no specialized data block is used.`);
 
 				read(1);
+				hasCopperCode = getValue();
 				createNode('HAS_COPPER_CODE', decimalValue(), 'Inclusion of copper code');
 				addDescription('1 = Has copper code block, extra 2048B block after last screen data block, which will be set to Copper and the copper will be started with %01 control code (reset CPC to 0, and start). This can be used for example as "loading screen animation" feature (be aware the timing of load may vary greatly).');
 
@@ -350,11 +352,11 @@ When screens 320x256x8 or 640x256x4 are used, this byte is re-used as palette of
 
 		// Layer 2 320x256x8 or 640x256x4 loading screen
 		if (loadScreens & 0b0100_0000) {
+			read(81920);
 			// Check which screen
 			switch (loadScreens2) {
 				case 1:
 					// Layer 2 320x256x8bpp, blocks: [512B palette +] 81920B data
-					read(81920);
 					createNode('LAYER2_320_LOAD_SCREEN', '', 'Layer 2 320x256x8bpp, 1 byte per pixel');
 					addDetailsParsing(() => {
 						read(81920);
@@ -370,7 +372,6 @@ When screens 320x256x8 or 640x256x4 are used, this byte is re-used as palette of
 					break;
 				case 2:
 					// Layer 2 640x256x8bpp, blocks: [512B palette +] 81920B data
-					read(81920);
 					createNode('LAYER2_320_LOAD_SCREEN', '', 'Layer 2 640x256x4bpp, 4 bits per pixel');
 					addDetailsParsing(() => {
 						read(81920);
@@ -386,7 +387,6 @@ When screens 320x256x8 or 640x256x4 are used, this byte is re-used as palette of
 					break;
 				case 3:
 					// Tilemode. Is not shown as image (too much work). Instead only the memdump.
-					read(81920);
 					createNode('TILE_MODE_LOAD_SCREEN', '', 'Tilemode screen');
 					addDelayedDetailsParsing(() => {
 						read(81920);
@@ -394,7 +394,16 @@ When screens 320x256x8 or 640x256x4 are used, this byte is re-used as palette of
 					});
 					break;
 			}
+		}
 
+		// Copper code
+		if (hasCopperCode == 1) {
+			read(2048);
+			createNode('COPPER_CODE', '', 'Copper code for copper loading-effects');
+			addDelayedDetailsParsing(() => {
+				read(2048);
+				createCopperDump();
+			});
 		}
 
 	}

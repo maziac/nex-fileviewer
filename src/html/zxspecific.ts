@@ -557,3 +557,70 @@ function createTimexHiColScreen() {
 }
 
 
+
+/**
+ * Is called if the user opens the details for the copper code.
+ * Decodes the data.
+ * @param displayOffset The displayOffset is added to the index before displaying.
+ * @param hoverRelativeOffset You can replace the default relative Offset hover text.
+ */
+function createCopperDump() {
+	let html = '';
+
+	// In case of an error, show at least what has been parsed so far.
+	try {
+		const hoverRelativeOffset = 'Relative Offset'
+		// Loop given size
+		for (let i = 0; i < lastSize; i += 2) {
+			// Get value
+			const iOffset = lastOffset + i;	// For indexing
+			const iRelOffset = i / 2;	// For display
+			const val = dataBuffer[iOffset] + dataBuffer[iOffset + 1];
+			const valString = convertBitsToString(val, 2);
+			const iRelOffsetHex = getHexString(iRelOffset, 4);
+
+			// Show offset
+			const iOffsetHex = getHexString(iOffset, 4);
+			html += `<div class="mem_dump">
+				<div class="indent mem_offset" title = "Offset\nHex: ${iOffsetHex}">${iOffset}</div>
+			<div class="mem_rel_offset" title="${hoverRelativeOffset}\nHex: ${iRelOffsetHex}">[${iRelOffset}]:</div>
+			`;
+
+			// Value
+			html += '<div class="mem_byte">' + valString + '&nbsp;</div>';
+
+			// Decoded value
+			let cmd;
+			if (val == 0) {
+				// NOOP
+				cmd = 'NOOP';
+			}
+			else if (val == 0xFFFF) {
+				// HALT
+				cmd = 'HALT';
+			}
+			else if (val & 0x8000) {
+				// WAIT
+				cmd = `WAIT: FOR v==${val & 0x1FF} AND h*8==${(val >>> 9) & 0b111111}`;
+			}
+			else {
+				// MOVE
+				cmd = `MOVE: ${val & 0xFF} TO REG ${(val >>> 8) & 0b1111111}`;
+			}
+			html += '<div class="copper_cmd">= ' + cmd + '</div>';
+
+			// Close
+			html += '</div>';
+		}
+	}
+	catch (e) {
+		// Close
+		html += '</div>';
+		// Error while parsing
+		html += '<div class="error indent">Error while parsing.</div>';
+	}
+
+	// Append
+	lastNode.innerHTML += html;
+}
+

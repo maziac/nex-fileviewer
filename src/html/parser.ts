@@ -448,7 +448,7 @@ function createMemDump(displayOffset = 0, hoverRelativeOffset = 'Relative Offset
 				const iOffsetHex = getHexString(iOffset, 4);
 				html += `<div class="mem_dump">
 					<div class="indent mem_offset" title = "Offset\nHex: ${iOffsetHex}">${iOffset}</div>
-				<div class="mem_rel_offset" title="${hoverRelativeOffset}\nDec: ${iRelOffset}"> (0x${iRelOffsetHex})</div>
+				<div class="mem_rel_offset" title="${hoverRelativeOffset}\nDec: ${iRelOffset}">(0x${iRelOffsetHex})</div>
 				`;
 			}
 

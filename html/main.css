@@ -119,6 +119,8 @@ summary::-webkit-details-marker {
 	color: transparent;
 }
 
+
+/* Width/height for the loading screens. */
 .load_screen {
 	width: 512px;
 }
@@ -129,5 +131,11 @@ summary::-webkit-details-marker {
 .load_screen_layer2_320_640 {
 	width: 640px;
 	height: 512px;
+}
+
+
+/* Decoded copepr commands. */
+.copper_cmd {
+	font-weight: bold;
 }
 

@@ -570,12 +570,14 @@ function createCopperDump() {
 	// In case of an error, show at least what has been parsed so far.
 	try {
 		const hoverRelativeOffset = 'Relative Offset'
+		// Find last non NOOP command.
+
 		// Loop given size
 		for (let i = 0; i < lastSize; i += 2) {
 			// Get value
 			const iOffset = lastOffset + i;	// For indexing
 			const iRelOffset = i / 2;	// For display
-			const val = dataBuffer[iOffset] + dataBuffer[iOffset + 1];
+			const val = 256*dataBuffer[iOffset] + dataBuffer[iOffset + 1];
 			const valString = convertBitsToString(val, 2);
 			const iRelOffsetHex = getHexString(iRelOffset, 4);
 
@@ -601,11 +603,15 @@ function createCopperDump() {
 			}
 			else if (val & 0x8000) {
 				// WAIT
-				cmd = `WAIT: FOR v==${val & 0x1FF} AND h*8==${(val >>> 9) & 0b111111}`;
+				const v = val & 0x1FF;
+				const h = (val >>> 9) & 0b111111;
+				cmd = `WAIT v==${v} (0x${getHexString(v,2)}) AND h==${h} (0x${getHexString(h,2)})`;
 			}
 			else {
 				// MOVE
-				cmd = `MOVE: ${val & 0xFF} TO REG ${(val >>> 8) & 0b1111111}`;
+				const v = val & 0xFF;
+				const r = (val >>> 8) & 0b1111111;
+				cmd = `MOVE ${v} (0x${getHexString(v, 2)}) TO REG ${r} (0x${getHexString(r, 2)})`;
 			}
 			html += '<div class="copper_cmd">= ' + cmd + '</div>';
 

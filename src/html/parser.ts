@@ -168,8 +168,12 @@ function addDetailsParsing(func: () => void) {
 	// "Indent"
 	beginDetails();
 	// Call function
+	const bakLastOffset = lastOffset;
+	const bakLastSize = lastSize;
 	lastSize = 0;
 	func();
+	lastOffset = bakLastOffset;
+	lastSize = bakLastSize;
 	// Close/leave
 	endDetails();
 }

@@ -38,10 +38,9 @@ function parseRoot() {
 		let loadScreens;
 		let loadScreens2;
 		let hiresColor;
+		read(512);
 		createNode('Header').open = true;
-		{
-			beginDetails();
-
+		addDetailsParsing(() => {
 			read(4);
 			const nextString = stringValue();
 			createNode('NEXT', nextString);
@@ -76,27 +75,22 @@ function parseRoot() {
 			read(1);
 			loadScreens = getValue();
 			createNode('LOAD_SCREENS', bitsValue(), 'Loading-screen blocks in file');
-			const loadScrDescr = convertLineBreaks(`
+			addDetailsParsing(() => {
+				createDescription(`
 128 = no palette block, 64 = "flags 2" in V1.3 part of header define screen, 16 = Hi-Colour, 8 = Hi-Res, 4 = Lo-Res, 2 = ULA, 1 = Layer2
 
 The loader does use common banks to load the graphics into, and show it from, i.e. bank5 for all ULA related modes and banks 9,10 and 11 for Layer2 graphics (loading these banks afterwards as regular bank will thus replace the shown data on screen).
 
 Only Layer2, Tilemap and Lo-Res screens expect the palette block (unless +128 flag set). While one can include multiple screen data in single file (setting up all relevant bits), the recommended/expected usage is to have only one type of screen in NEX file.`);
-
-			beginDetails();
-			createDescription(loadScrDescr);
-			createNode('No palette block', bitValue(7), 'Bit 7');
-			createNode('flags 2', bitValue(6), 'Bit 6');
-			createNode('Unused', bitValue(7), 'Bit 5');
-			createNode('Hi-Colour', bitValue(4), 'Bit 4');
-			createNode('Hi-Res', bitValue(3), 'Bit 3');
-			createNode('Lo-Res', bitValue(2), 'Bit 2');
-			createNode('ULA', bitValue(1), 'Bit 1');
-			createNode('Layer 2', bitValue(0), 'Bit 0');
-			//createLine('');
-			//createLine(loadScrDescr);
-			endDetails();
-
+				createNode('No palette block', bitValue(7), 'Bit 7');
+				createNode('flags 2', bitValue(6), 'Bit 6');
+				createNode('Unused', bitValue(7), 'Bit 5');
+				createNode('Hi-Colour', bitValue(4), 'Bit 4');
+				createNode('Hi-Res', bitValue(3), 'Bit 3');
+				createNode('Lo-Res', bitValue(2), 'Bit 2');
+				createNode('ULA', bitValue(1), 'Bit 1');
+				createNode('Layer 2', bitValue(0), 'Bit 0');
+			});
 
 			read(1);
 			createNode('BORDER_COLOR', zxColorValue(), 'Border Color: 0-7');
@@ -117,16 +111,14 @@ Only Layer2, Tilemap and Lo-Res screens expect the palette block (unless +128 fl
 
 			read(112);
 			createNode('BANKS', banksValue(), 'Array of included banks');
-			let descr = 'byte flag (0/1) of 16k banks included in the file - this array is in regular order 0..111, i.e. bank5 in file will set 1 to header byte at offset 18+5 = 23, but the 16kiB of data for bank 5 are first in the file (order of bank data in file is: 5,2,0,1,3,4,6,7,8,9,10,...,111)';
-			addDescription(descr);
-			beginDetails();
-			createDescription(descr);
-			lastSize = 0;
-			for (let i = 0; i < 112; i++) {
-				read(1);
-				createNode('Bank' + i, decimalValue());
-			}
-			endDetails();
+			addDetailsParsing(() => {
+				createDescription('byte flag (0/1) of 16k banks included in the file - this array is in regular order 0..111, i.e. bank5 in file will set 1 to header byte at offset 18+5 = 23, but the 16kiB of data for bank 5 are first in the file (order of bank data in file is: 5,2,0,1,3,4,6,7,8,9,10,...,111)');
+				lastSize = 0;
+				for (let i = 0; i < 112; i++) {
+					read(1);
+					createNode('Bank' + i, decimalValue());
+				}
+			});
 
 			read(1);
 			createNode('LOAD_BAR', decimalValue(), 'Layer2 "loading bar"');
@@ -252,7 +244,7 @@ When screens 320x256x8 or 640x256x4 are used, this byte is re-used as palette of
 
 			// Check size
 			assert(lastOffset == 512);
-		}
+		});
 
 
 		// Palette
@@ -408,15 +400,15 @@ When screens 320x256x8 or 640x256x4 are used, this byte is re-used as palette of
 		}
 
 		// Memory banks
-		for (let b = 0; b < 118; b++) {
+		for (let b = 0; b < 112; b++) {
 			// Check byte flag
-			const bankEnabled = (dataBuffer[18 + b] == 1);
+			const bank = getMemBankPermutation(b);
+			const bankEnabled = (dataBuffer[18 + bank] == 1);
 			if (!bankEnabled)
 				continue;
 
 			// Decode memory bank
 			read(16384);
-			const bank = getMemBankPermutation(b);
 			createNode('BANK' + bank, '', '16k memory bank');
 			addDelayedDetailsParsing(() => {
 				read(16384);

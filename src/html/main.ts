@@ -384,6 +384,15 @@ When screens 320x256x8 or 640x256x4 are used, this byte is re-used as palette of
 						});
 					});
 					break;
+				case 3:
+					// Tilemode. Is not shown as image (too much work). Instead only the memdump.
+					read(81920);
+					createNode('TILE_MODE_LOAD_SCREEN', '', 'Tilemode screen');
+					addDelayedDetailsParsing(() => {
+						read(81920);
+						createMemDump();
+					});
+					break;
 			}
 
 		}

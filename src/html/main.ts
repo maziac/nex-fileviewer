@@ -330,6 +330,23 @@ When screens 320x256x8 or 640x256x4 are used, this byte is re-used as palette of
 			});
 		}
 
+		// Timex HiCol loading screen
+		if (loadScreens & 0b0001_0000) {
+			const timexInkColor = (hiresColor >> 2) & 0b111;
+			read(12288);
+			createNode('HICOL_LOAD_SCREEN', '', 'Timex HiCol (8x1) loading screen');
+			addDetailsParsing(() => {
+				createDescription(`HiCol modes uses more attributes. I.e. the attribute applies to 1 byte only.`);
+				read(12288);
+				createTimexHiColScreen(palette);
+				createNode('Memory dump');
+				addDelayedDetailsParsing(() => {
+					read(12288);
+					createMemDump();
+				});
+			});
+		}
+
 	}
 	catch (e) {
 		// In case of an error show the rest as memdump

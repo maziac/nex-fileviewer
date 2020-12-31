@@ -373,14 +373,14 @@ function createTimexHiResScreen(inkColor: number) {
 				let val = buffer[inIndex];
 				// Color
 				for (let k = 7; k >= 0; k--) {
-					pixels[pixelIndex+k] = val & 0b1;
+					pixels[pixelIndex + k] = val & 0b1;
 					val >>= 1;
 				}
 				pixelIndex += 8;
 				// Alternate buffer
-				val = buffer[inIndex+buf2Offset];
+				val = buffer[inIndex + buf2Offset];
 				for (let k = 7; k >= 0; k--) {
-					pixels[pixelIndex+k] = val & 0b1;
+					pixels[pixelIndex + k] = val & 0b1;
 					val >>= 1;
 				}
 				pixelIndex += 8;
@@ -393,6 +393,80 @@ function createTimexHiResScreen(inkColor: number) {
 		const base64String = arrayBufferToBase64(gifBuffer);
 		// Add to html
 		lastNode.innerHTML += '<img class="load_screen_hires" style="image-rendering:pixelated" src="data:image/gif;base64,' + base64String + '">';
+	}
+	catch {
+		lastNode.innerHTML += '<div class="error">Error converting image.</div>';
+	}
+}
+
+
+
+
+/**
+ * Is called if the user opens the details of for the timex HiCol 8x1
+ * screen.
+ * Decodes the image data.
+ * Half of the buffer is used for pixel data. The other half is attribute data.
+ * I.e. each byte has an own attribute.
+ */
+function createTimexHiColScreen(inkColor: number) {
+	// Complement color
+	const papercolor = (~inkColor) & 0b111;
+	// Image
+	try {
+		// Check size
+		if (lastOffset + 12288 > dataBuffer.length)
+			throw Error();
+		// Create palette
+		const palette = UlaScreen.getZxPalette();
+		// Get image data
+		const buffer = dataBuffer.slice(lastOffset, lastOffset + 12288);
+		// Convert every bit into a pixel
+		const pixels = new Array<number>(8 * 12288);
+
+		// One line after the other
+		let pixelIndex = 0;
+		let inIndex = 0;
+		const attrOffset = 12288 / 2;
+		for (let y = 0; y < 192; y++) {
+			// Calculate offset in ZX Spectrum screen
+			inIndex = (((y & 0b111) << 8) | ((y & 0b1100_0000) << 5) | ((y & 0b11_1000) << 2));
+			//inIndex=y*32
+			for (let x = 0; x < 32; x++) {
+				// Get pixel value
+				let val = buffer[inIndex];
+				// Get color
+				let color = buffer[inIndex+attrOffset];
+				let mask = 0x80;
+				while (mask) {	// 8x
+					const value = val & mask;
+					// Check if pixel is set
+					let cIndex = (color & 0x40) >>> 3;	// Brightness
+					if (value) {
+						// Set: foreround
+						cIndex |= color & 0x07;
+					}
+					else {
+						// Unset: background
+						cIndex |= (color >>> 3) & 0x07;
+					}
+
+					// Save color index
+					pixels[pixelIndex] = cIndex;
+
+					// Next pixel
+					mask >>>= 1;
+					pixelIndex++;
+				}
+				// Next
+				inIndex++;
+			}
+		}
+		// Convert image
+		const gifBuffer = ImageConvert.createGifFromArray(256, 192, pixels, palette);
+		const base64String = arrayBufferToBase64(gifBuffer);
+		// Add to html
+		lastNode.innerHTML += '<img class="load_screen" style="image-rendering:pixelated" src="data:image/gif;base64,' + base64String + '">';
 	}
 	catch {
 		lastNode.innerHTML += '<div class="error">Error converting image.</div>';

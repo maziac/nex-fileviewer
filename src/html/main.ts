@@ -47,7 +47,10 @@ function parseRoot() {
 
 			read(4);
 			const version = stringValue();
-			createNode('VERSION', version);
+			let unOfficial;
+			if (version == 'V1.3')
+				unOfficial = '(unofficial)';
+			createNode('VERSION', version, unOfficial);
 
 			read(1);
 			const ramRequired = getValue();
@@ -398,10 +401,50 @@ When screens 320x256x8 or 640x256x4 are used, this byte is re-used as palette of
 			});
 		}
 
+		// Memory banks
+		for (let b = 0; b < 118; b++) {
+			// Check byte flag
+			const bankEnabled = (dataBuffer[18 + b] == 1);
+			if (!bankEnabled)
+				continue;
+
+			// Decode memory bank
+			read(16384);
+			const bank = getMemBankPermutation(b);
+			createNode('BANK' + bank, '', '16k memory bank');
+			addDelayedDetailsParsing(() => {
+				read(16384);
+				createMemDump();
+			});
+		}
+
+		// Optional data
+		const remainingLength = dataBuffer.length - lastOffset - lastSize;
+		assert(remainingLength >= 0);
+		if(remainingLength>0) {
+			read(remainingLength);
+			createNode('OPTIONAL_DATA', '', 'Optional binary data appended after "regular" NEX file content - custom format');
+			addDelayedDetailsParsing(() => {
+				read(remainingLength);
+				createMemDump();
+			});
+		}
+
 	}
 	catch (e) {
-		// In case of an error show the rest as memdump
-		// TODO.
+		// In case of an error show the rest as memdump.
+		// Partly decoded data might be re-dumped.
+		const remainingLength = dataBuffer.length - lastOffset;
+		assert(remainingLength >= 0);
+		if (remainingLength > 0) {
+			read(remainingLength);
+			createNode('Remaining', '', 'Remaining data after parsing error.');
+			addDelayedDetailsParsing(() => {
+				read(remainingLength);
+				createMemDump();
+			});
+		}
+
 	}
 
 }

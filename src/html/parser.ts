@@ -42,7 +42,10 @@ var lastNameNode: any;
 // The last node used for the value.
 var lastValueNode: any;
 
-// The last node used for the description.
+// The last node used for the short description.
+var lastDescriptionNode: any;
+
+// The last node used for the long description.
 var lastLongDescriptionNode: any;
 
 
@@ -80,7 +83,6 @@ function createNode(name: string, valString = '', shortDescription = '') {
 	const node = document.createElement("DETAILS");
 	node.classList.add("nomarker");
 	//node.classList.add("basenode");
-	// TODO: Remove DETAILS for description.
 	const lastOffsetHex = getHexString(lastOffset, 4);
 	const lastSizeHex = getHexString(lastSize, 4);
 	const html = `
@@ -89,9 +91,7 @@ function createNode(name: string, valString = '', shortDescription = '') {
 	<div class="size" title="Size\nHex: ${lastSizeHex}">${lastSize}</div>
 	<div class="name">${name}</div>
 	<div class="value">${valString}</div>
-	<details class="description nomarker" >
-		<summary><div>${shortDescription}</div></summary>
-		<div></div>
+	<div class="description">${shortDescription}</div>
 </summary>
 <div class="indent"></div>
 `;
@@ -104,8 +104,8 @@ function createNode(name: string, valString = '', shortDescription = '') {
 	const children = summary.childNodes;
 	lastNameNode = children[5];
 	lastValueNode = children[7];
-	const descriptionNode = children[9];
-	const descriptionChildren = descriptionNode.childNodes;
+	lastDescriptionNode = children[9];
+	const descriptionChildren = lastDescriptionNode.childNodes;
 	lastLongDescriptionNode = descriptionChildren[3];
 
 	// Append it

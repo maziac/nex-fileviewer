@@ -24,7 +24,7 @@ function parseRoot() {
 	const htmlContent = lastNode.innerHTML;
 
 	// Meta info
-	let html = '<div>ZX NEX File.</div>';
+	let html = '<div>ZX NEX File View.</div>';
 	const length = dataBuffer.length;
 	html += '<div><b>Length:</b> ' + length + '</div>';
 	html += '<br>';
@@ -43,7 +43,13 @@ function parseRoot() {
 			beginDetails();
 
 			read(4);
-			createNode('NEXT', stringValue());
+			const nextString = stringValue();
+			createNode('NEXT', nextString);
+			if (nextString != 'Next') {
+				// Not a NEX file
+				lastDescriptionNode.classList.add('error');
+				lastDescriptionNode.textContent = 'Not a NEX file.';
+			}
 
 			read(4);
 			const version = stringValue();

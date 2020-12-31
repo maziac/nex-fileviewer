@@ -355,12 +355,28 @@ When screens 320x256x8 or 640x256x4 are used, this byte is re-used as palette of
 				case 1:
 					// Layer 2 320x256x8bpp, blocks: [512B palette +] 81920B data
 					read(81920);
-					createNode('LAYER2_320_LOAD_SCREEN', '', 'Layer 2 320x256, 1 byte per pixel');
+					createNode('LAYER2_320_LOAD_SCREEN', '', 'Layer 2 320x256x8bpp, 1 byte per pixel');
 					addDetailsParsing(() => {
 						read(81920);
-						const palOffset = hiresColor;
+						const palOffset = hiresColor & 0x0F;
 						const offsPalette = createPaletteWithOffset(palette, palOffset);
 						createLayer2Screen320(offsPalette);
+						createNode('Memory dump');
+						addDelayedDetailsParsing(() => {
+							read(81920);
+							createMemDump();
+						});
+					});
+					break;
+				case 2:
+					// Layer 2 640x256x8bpp, blocks: [512B palette +] 81920B data
+					read(81920);
+					createNode('LAYER2_320_LOAD_SCREEN', '', 'Layer 2 640x256x4bpp, 4 bits per pixel');
+					addDetailsParsing(() => {
+						read(81920);
+						const palOffset = hiresColor & 0x0F;
+						const offsPalette = createPaletteWithOffset(palette, palOffset);
+						createLayer2Screen640(offsPalette);
 						createNode('Memory dump');
 						addDelayedDetailsParsing(() => {
 							read(81920);

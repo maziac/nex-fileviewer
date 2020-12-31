@@ -335,6 +335,7 @@ function createLayer2Screen(palette: number[]) {
 	}
 }
 
+
 /**
  * Is called if the user opens the details of for the Layer2 screen
  * with 320x256 pixels.
@@ -348,17 +349,51 @@ function createLayer2Screen320(palette: number[]) {
 			throw Error();
 		// Get image data. X and Y are swapped.
 		const pixels = new Array<number>(81920);
-		let index = 0;
-		for (let y = 0; y < 256; y++) {
-			for (let x = 0; x < 320; x++) {
-				pixels[index++] = dataBuffer[lastOffset + x * 256 + y];
+		let index = lastOffset;
+		for (let x = 0; x < 320; x++) {
+			for (let y = 0; y < 256; y++) {
+				pixels[x+y*320] = dataBuffer[index++];
 			}
 		}
 		// Convert image
 		const gifBuffer = ImageConvert.createGifFromArray(320, 256, pixels, palette);
 		const base64String = arrayBufferToBase64(gifBuffer);
 		// Add to html
-		lastNode.innerHTML += '<img class="load_screen" style="image-rendering:pixelated" src="data:image/gif;base64,' + base64String + '">';
+		lastNode.innerHTML += '<img class="load_screen_layer2_320_640" style="image-rendering:pixelated" src="data:image/gif;base64,' + base64String + '">';
+	}
+	catch {
+		lastNode.innerHTML += '<div class="error">Error converting image.</div>';
+	}
+}
+
+
+/**
+ * Is called if the user opens the details of for the Layer2 screen
+ * with 640x256 pixels.
+ * Decodes the image data.
+ */
+function createLayer2Screen640(palette: number[]) {
+	// Image
+	try {
+		// Check size
+		if (lastOffset + 81920 > dataBuffer.length)
+			throw Error();
+		// Get image data. X and Y are swapped.
+		const pixels = new Array<number>(640 * 256);
+		let index = lastOffset;
+		for (let x = 0; x < 640; x += 2) {
+			for (let y = 0; y < 256; y++) {
+				const val = dataBuffer[index++];
+				const k = x + y * 640;
+				pixels[k] = val >> 4;
+				pixels[k + 1] = val & 0x0F;
+			}
+		}
+		// Convert image
+		const gifBuffer = ImageConvert.createGifFromArray(640, 256, pixels, palette);
+		const base64String = arrayBufferToBase64(gifBuffer);
+		// Add to html
+		lastNode.innerHTML += '<img class="load_screen_layer2_320_640" style="image-rendering:pixelated" src="data:image/gif;base64,' + base64String + '">';
 	}
 	catch {
 		lastNode.innerHTML += '<div class="error">Error converting image.</div>';
@@ -450,8 +485,6 @@ function createTimexHiResScreen(inkColor: number) {
 		lastNode.innerHTML += '<div class="error">Error converting image.</div>';
 	}
 }
-
-
 
 
 /**

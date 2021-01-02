@@ -11,7 +11,7 @@ If you like the "ZX NEX File Viewer" please consider supporting it.
 
 
 This extension adds a readonly file viewer for ZX Spectrum NEX files.
-It is a special file format for loading ZX Next programs.
+.nex is a special file format for loading ZX Next programs.
 The viewer shows registers, a memory dump and the included screen images.
 
 The NEX file format specification can be found [here](https://wiki.specnext.dev/NEX_file_format).
@@ -30,10 +30,10 @@ The file is opened and shown in the text editor area.
 
 ![](assets/usage.gif)
 
-Alternatively you can open a SNA file via "Open With...":
+Alternatively you can open a NEX file via "Open With...":
 
 ![](assets/usage-open-with.gif)
 
-When hovering over a value or register name you will get additional info like the offset or the value in decimal:
+When hovering over a value you can get additional info like the offset or the value in decimal:
 
 ![](assets/hovering.gif)

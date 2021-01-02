@@ -67,7 +67,7 @@ function parseRoot() {
 			}
 			createNode('RAM_REQUIRED', ramReqValue, 'The required RAM.');
 			addDescription('0 = 768k, 1 = 1792k');
-			addHoverValue(decimalValue());
+			addHoverValue('Dec: ' + decimalValue());
 
 			read(1);
 			createNode('NUM_BANKS', decimalValue(), 'Number of 16k Banks to Load: 0-112');
@@ -94,16 +94,16 @@ Only Layer2, Tilemap and Lo-Res screens expect the palette block (unless +128 fl
 
 			read(1);
 			createNode('BORDER_COLOR', zxColorValue(), 'Border Color: 0-7');
-			addHoverValue(decimalValue());
+			addHoverValue('Dec: ' + decimalValue());
 
 			read(2);
 			createNode('SP', hex0xValue(), 'Stack pointer');
-			addHoverValue(decimalValue());
+			addHoverValue('Dec: ' + decimalValue());
 
 			read(2);
 			createNode('PC', hex0xValue(), 'Program counter');
 			addDescription("0 = don't run, just load");
-			addHoverValue(decimalValue());
+			addHoverValue('Dec: ' + decimalValue());
 
 			read(2);
 			createNode('NUM_FILES', decimalValue(), 'Number of extra files');
@@ -167,7 +167,7 @@ When screens 320x256x8 or 640x256x4 are used, this byte is re-used as palette of
 			read(2);
 			createNode('FILE_HANDLE_ADDR', hexValue(), 'File handle address');
 			addDescription('0 = NEX file is closed by the loader, 1..0x3FFF values (1 recommended) = NEX loader keeps NEX file open and does pass the file handle in BC register, 0x4000..0xFFFF values (for 0xC000..0xFFFF see also "Entry bank") = NEX loader keeps NEX file open and the file handle is written into memory at the desired address.');
-			addHoverValue(decimalValue());
+			addHoverValue('Dec: ' + decimalValue());
 			// End of version 1.2 header
 			assert(lastOffset + lastSize == 142);
 
@@ -195,7 +195,7 @@ When screens 320x256x8 or 640x256x4 are used, this byte is re-used as palette of
 				read(4);
 				createNode('BANKS_OFFSET', hexValue(), 'File offset of first bank data');
 				addDescription('File offset of first bank data (when loader is parsing known version, it should know where the banks start without this value, but it may use it for extra check whether the parsing of optional blocks between header and first bank was done correctly for files V1.3+, or it may even try to partially-load unknown future versions of NEX files by skipping unknown blocks between header and banks data, although that may lead to unexpected state for the app)');
-				addHoverValue(decimalValue());
+				addHoverValue('Dec: ' + decimalValue());
 
 				read(2);
 				createNode('CLI_BUFFER_ADDR', decimalValue(), 'CLI buffer address');

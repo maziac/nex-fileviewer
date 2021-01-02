@@ -19,9 +19,6 @@ declare var lastNode: any;
 
 //---- Parse the data (root level) --------
 function parseRoot() {
-	lastNode = document.getElementById("div_root");
-	const htmlContent = lastNode.innerHTML;
-
 	// Meta info
 	let html = '<div>ZX NEX File View.</div>';
 	const length = dataBuffer.length;

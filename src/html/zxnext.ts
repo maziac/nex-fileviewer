@@ -4,19 +4,6 @@ declare var lastNode: any;
 
 
 
-
-/**
- * Returns the right bank for an index.
- *  5,2,0,1,3,4,6,7,8,9,10,...,111.
- * @returns the bank number 0-111.
- */
-function getMemBankPermutation(i: number): number {
-	if (i >= 6)
-		return i;
-	return [5, 2, 0, 1, 3, 4][i];
-}
-
-
 /**
  * @returns The core version number.
  */

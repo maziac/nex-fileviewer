@@ -32,18 +32,25 @@ export class EditorProvider implements vscode.CustomReadonlyEditorProvider {
 
 		// Read the file
 		const filePath = snaDoc.uri.fsPath;
-		const snaData = readFileSync(filePath);
+
+		// Handle 'ready' message from the webview
+		webviewPanel.webview.onDidReceiveMessage(message => {
+			switch (message.command) {
+				case 'ready':
+					// Send file data to webview
+					const snaData = readFileSync(filePath);
+					const message = {
+						command: 'setData',
+						snaData: [...snaData]
+					};
+					webviewPanel.webview.postMessage(message);
+					break;
+			}
+		});
 
 		// Create html code
 		const html = this.getMainHtml(webviewPanel);
 		webviewPanel.webview.html = html;
-
-		// Parse data
-		const message = {
-			command: 'setData',
-			snaData: [...snaData]
-		};
-		webviewPanel.webview.postMessage(message);
 	}
 
 

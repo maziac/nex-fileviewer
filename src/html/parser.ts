@@ -70,7 +70,7 @@ function arrayBufferToBase64(buffer) {
 
 
 /**
- * Creates a node and appends it to parseNode.
+ * Creates a node and appends it to lastNode.
  * @param name The name of the value. E.g. "SP".
  * @param valString The value to show.
  * @param shortDescription A short description of the entry.
@@ -431,7 +431,7 @@ function parseStart() {
 	// Reset
 	lastOffset = 0;
 	lastSize = 0;
-	lastNode = undefined;
+	lastNode = document.getElementById("div_root");
 	// Parse
 	parseRoot();
 }
@@ -461,3 +461,8 @@ window.addEventListener('message', event => {
 	}
 });
 
+// At the end send a message to indicate that the webview is ready to receive
+// data.
+vscode.postMessage({
+	command: 'ready'
+});

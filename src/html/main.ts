@@ -20,7 +20,6 @@ declare var lastNode: any;
 //---- Parse the data (root level) --------
 function parseRoot() {
 	lastNode = document.getElementById("div_root");
-
 	const htmlContent = lastNode.innerHTML;
 
 	// Meta info
@@ -442,7 +441,6 @@ When screens 320x256x8 or 640x256x4 are used, this byte is re-used as palette of
 				createMemDump();
 			});
 		}
-
 	}
 
 }

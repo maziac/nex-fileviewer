@@ -1,7 +1,9 @@
 # Changelog
 
-# 1.1.0
-- Nex file viewer will update automatically if file changes in background.
+## 1.1.0
+- NEX file viewer will update automatically if file changes in background.
+- Load screen now opened by default.
+
 ## 1.0.0
 - First beta test version.
 - Register view.

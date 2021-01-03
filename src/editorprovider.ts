@@ -40,7 +40,7 @@ export class EditorProvider implements vscode.CustomReadonlyEditorProvider {
 					// Send data
 					this.sendDataToWebView(filePath, webviewPanel);
 					// Establish file watcher to check for changes
-					const fsWatcher = vscode.workspace.createFileSystemWatcher(filePath, false, false, true);
+					const fsWatcher = vscode.workspace.createFileSystemWatcher(filePath, true, false, true);
 					fsWatcher.onDidChange(() => {
 						// Re-read data
 						this.sendDataToWebView(filePath, webviewPanel);

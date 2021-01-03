@@ -69,12 +69,12 @@ a.tip {
 
 /* Class for the description */
 .description {
-	padding-left: 0.5em;
+	padding-left: 1.5em;
 	width: auto;
 }
 
 
-/* Expanded content of a memroy dump. */
+/* Expanded content of a memory dump. */
 .mem_dump {
 	display: table-row;
 }

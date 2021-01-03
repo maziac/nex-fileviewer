@@ -270,7 +270,7 @@ When screens 320x256x8 or 640x256x4 are used, this byte is re-used as palette of
 		// Layer 2 loading screen
 		if (loadScreens & 0b0000_0001) {
 			read(49152);
-			createNode('LAYER2_LOAD_SCREEN', '', 'Layer 2 loading screen');
+			createNode('LAYER2_LOAD_SCREEN', '', 'Layer 2 loading screen').open = true;
 			addDetailsParsing(() => {
 				createDescription('Palette consists of 512 bytes (256 palette items from index 0), in 9b color format: first byte is RRRG_GGBB, second byte is P000_000B (P is priority flag for Layer 2 colours).');
 				read(49152);
@@ -286,7 +286,7 @@ When screens 320x256x8 or 640x256x4 are used, this byte is re-used as palette of
 		// ULA loading screen
 		if (loadScreens & 0b0000_0010) {
 			read(6912);
-			createNode('ULA_LOAD_SCREEN', '', 'Classic ULA loading screen');
+			createNode('ULA_LOAD_SCREEN', '', 'Classic ULA loading screen').open = true;
 			addDetailsParsing(() => {
 				read(6912);
 				createUlaScreen();
@@ -301,7 +301,7 @@ When screens 320x256x8 or 640x256x4 are used, this byte is re-used as palette of
 		// LoRes loading screen
 		if (loadScreens & 0b0000_0100) {
 			read(12288);
-			createNode('LORES_LOAD_SCREEN', '', 'LoRes (128x96) loading screen');
+			createNode('LORES_LOAD_SCREEN', '', 'LoRes (128x96) loading screen').open = true;
 			addDetailsParsing(() => {
 				createDescription('Palette consists of 512 bytes (256 palette items from index 0), in 9b color format: first byte is RRRG_GGBB, second byte is P000_000B (P is is not used for LoRes).');
 				read(12288);
@@ -318,7 +318,7 @@ When screens 320x256x8 or 640x256x4 are used, this byte is re-used as palette of
 		if (loadScreens & 0b0000_1000) {
 			const timexInkColor = (hiresColor >> 2) & 0b111;
 			read(12288);
-			createNode('HIRES_LOAD_SCREEN', '', 'Timex HiRes (512x192) loading screen');
+			createNode('HIRES_LOAD_SCREEN', '', 'Timex HiRes (512x192) loading screen').open = true;
 			addDetailsParsing(() => {
 				createDescription(`The Timex HiRes mode supports only 2 colors.`);
 				read(12288);
@@ -334,7 +334,7 @@ When screens 320x256x8 or 640x256x4 are used, this byte is re-used as palette of
 		// Timex HiCol loading screen
 		if (loadScreens & 0b0001_0000) {
 			read(12288);
-			createNode('HICOL_LOAD_SCREEN', '', 'Timex HiCol (8x1) loading screen');
+			createNode('HICOL_LOAD_SCREEN', '', 'Timex HiCol (8x1) loading screen').open = true;
 			addDetailsParsing(() => {
 				createDescription(`HiCol modes uses more attributes. I.e. the attribute applies to 1 byte only.`);
 				read(12288);
@@ -354,7 +354,7 @@ When screens 320x256x8 or 640x256x4 are used, this byte is re-used as palette of
 			switch (loadScreens2) {
 				case 1:
 					// Layer 2 320x256x8bpp, blocks: [512B palette +] 81920B data
-					createNode('LAYER2_320_LOAD_SCREEN', '', 'Layer 2 320x256x8bpp, 1 byte per pixel');
+					createNode('LAYER2_320_LOAD_SCREEN', '', 'Layer 2 320x256x8bpp, 1 byte per pixel').open = true;
 					addDetailsParsing(() => {
 						read(81920);
 						const palOffset = hiresColor & 0x0F;
@@ -369,7 +369,7 @@ When screens 320x256x8 or 640x256x4 are used, this byte is re-used as palette of
 					break;
 				case 2:
 					// Layer 2 640x256x8bpp, blocks: [512B palette +] 81920B data
-					createNode('LAYER2_320_LOAD_SCREEN', '', 'Layer 2 640x256x4bpp, 4 bits per pixel');
+					createNode('LAYER2_320_LOAD_SCREEN', '', 'Layer 2 640x256x4bpp, 4 bits per pixel').open = true;
 					addDetailsParsing(() => {
 						read(81920);
 						const palOffset = hiresColor & 0x0F;

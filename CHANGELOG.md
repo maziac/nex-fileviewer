@@ -1,5 +1,7 @@
 # Changelog
 
+## 1.1.1
+- vscode category changed.
 ## 1.1.0
 - NEX file viewer will update automatically if file changes in background.
 - Load screen now opened by default.

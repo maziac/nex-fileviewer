@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.1.2
+- Buttons updated.
+
 ## 1.1.1
 - vscode category changed.
 

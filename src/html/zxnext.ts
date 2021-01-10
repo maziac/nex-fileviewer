@@ -67,10 +67,6 @@ function getZxNextDefaultPalette(): number[] {
 	// Create palette
 	const palette = new Array<number>(3 * 256);
 	for (let i = 0; i < 256; i++) {
-		// Get value
-		const iOffset = lastOffset + 2 * i;	// For indexing
-		const val0 = dataBuffer[iOffset];
-		const val1 = dataBuffer[iOffset + 1];
 		// Decode to RGB
 		const red = (i >> 5) * 32;
 		const green = ((i >> 2) & 0b111) * 32;
@@ -92,10 +88,6 @@ function createPaletteWithOffset(palette: number[], offset: number): number[] {
 	// Create palette
 	const offsPalette = new Array<number>(3 * 256);
 	for (let i = 0; i < 256; i++) {
-		// Get value RGB
-		const red = (i >> 5) * 32;
-		const green = ((i >> 2) & 0b111) * 32;
-		const blue = ((i << 1) & 0b110) * 32;
 		// Put into palette
 		const k = 3 * i;
 		const kOffs = 3 * ((i + offset) & 0xFF);

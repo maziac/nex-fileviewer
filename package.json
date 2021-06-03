@@ -2,7 +2,7 @@
     "name": "nex-fileviewer",
     "displayName": "NEX-FileViewer",
     "description": "A viewer for ZX Spectrum NEX (.nex) files.",
-    "version": "1.1.2",
+    "version": "1.2.0",
     "publisher": "maziac",
     "author": {
         "name": "Thomas Busse"
@@ -32,6 +32,11 @@
         "onCustomEditor:nex-fileviewer.viewer",
         "onCommand:nex-fileviewer.opennex"
     ],
+    "capabilities": {
+        "untrustedWorkspaces": {
+            "supported": true
+        }
+    },
     "main": "./out/extension",
     "contributes": {
         "customEditors": [

@@ -1,6 +1,6 @@
 # Changelog
 
-# 1.2.0
+## 1.2.0
 - Supporting vscode workspace trust.
 
 ## 1.1.2

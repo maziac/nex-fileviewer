@@ -1,13 +1,14 @@
-declare var dataBuffer: number[];
-declare var lastOffset: number;
-declare var lastNode: any;
+import {assert, getHexString, arrayBufferToBase64, lastOffset, dataBuffer, lastNode, lastSize, convertBitsToString} from "./parser";
+import {UlaScreen} from './ulascreen';
+import {ImageConvert} from './imageconvert';
+import {zxHtmlColor} from "./zxspecific";
 
 
 
 /**
  * @returns The core version number.
  */
-function coreVersionValue(): string {
+export function coreVersionValue(): string {
 	const charOffset = '0'.charCodeAt(0);
 	let s = String.fromCharCode(charOffset + dataBuffer[lastOffset]) + '.';
 	s += String.fromCharCode(charOffset + dataBuffer[lastOffset + 1]) + '.';
@@ -19,7 +20,7 @@ function coreVersionValue(): string {
 /**
  * @returns The included banks. If string gets too long '...' is returned instead.
  */
-function banksValue(): string {
+export function banksValue(): string {
 	let s = '';
 	for (let i = 0; i < lastSize; i++) {
 		const val = dataBuffer[lastOffset + i];
@@ -37,7 +38,7 @@ function banksValue(): string {
  * Reads the palette and returns a number array.
  * @return an array in the from R, G, B, R, G, B, ... R, G, B
  */
-function getPalette(): number[] {
+export function getPalette(): number[] {
 	// Convert palette
 	const palette = new Array<number>(3 * 256);
 	for (let i = 0; i < lastSize / 2; i++) {
@@ -63,7 +64,7 @@ function getPalette(): number[] {
  * Returns the ZX Next default palette.
  * @return an array in the from R, G, B, R, G, B, ... R, G, B
  */
-function getZxNextDefaultPalette(): number[] {
+export function getZxNextDefaultPalette(): number[] {
 	// Create palette
 	const palette = new Array<number>(3 * 256);
 	for (let i = 0; i < 256; i++) {
@@ -84,7 +85,7 @@ function getZxNextDefaultPalette(): number[] {
 /**
  * Creates a new palette from the given palette with the given offset.
  */
-function createPaletteWithOffset(palette: number[], offset: number): number[] {
+export function createPaletteWithOffset(palette: number[], offset: number): number[] {
 	// Create palette
 	const offsPalette = new Array<number>(3 * 256);
 	for (let i = 0; i < 256; i++) {
@@ -105,7 +106,7 @@ function createPaletteWithOffset(palette: number[], offset: number): number[] {
  * RRRGGGBB  P000000B
  * With P being the priority bit for Layer 2.
  */
-function createPalette() {
+export function createPalette() {
 	let html = '';
 
 	// In case of an error, show at least what has been parsed so far.
@@ -165,7 +166,7 @@ function createPalette() {
 /**
  * Creates a palette image from the dataBuffer (512 bytes).
  */
-function createPaletteImage() {
+export function createPaletteImage() {
 	assert(lastSize == 512);
 	try {
 		// Image array
@@ -205,7 +206,7 @@ function createPaletteImage() {
  * Is called if the user opens the details of for the Layer2 screen.
  * Decodes the image data.
  */
-function createLayer2Screen(palette: number[]) {
+export function createLayer2Screen(palette: number[]) {
 	// Image
 	try {
 		// Check size
@@ -230,7 +231,7 @@ function createLayer2Screen(palette: number[]) {
  * with 320x256 pixels.
  * Decodes the image data.
  */
-function createLayer2Screen320(palette: number[]) {
+export function createLayer2Screen320(palette: number[]) {
 	// Image
 	try {
 		// Check size
@@ -261,7 +262,7 @@ function createLayer2Screen320(palette: number[]) {
  * with 640x256 pixels.
  * Decodes the image data.
  */
-function createLayer2Screen640(palette: number[]) {
+export function createLayer2Screen640(palette: number[]) {
 	// Image
 	try {
 		// Check size
@@ -294,7 +295,7 @@ function createLayer2Screen640(palette: number[]) {
  * Is called if the user opens the details of for the LoRes screen.
  * Decodes the image data
  */
-function createLoResScreen(palette: number[]) {
+export function createLoResScreen(palette: number[]) {
 	// Image
 	try {
 		// Check size
@@ -320,7 +321,7 @@ function createLoResScreen(palette: number[]) {
  * Decodes the image data.
  * @param inkColor the ink color. The paper color is deducted as complement color to this.
  */
-function createTimexHiResScreen(inkColor: number) {
+export function createTimexHiResScreen(inkColor: number) {
 	// Complement color
 	const paperColor = (~inkColor) & 0b111;
 	// Image
@@ -383,7 +384,7 @@ function createTimexHiResScreen(inkColor: number) {
  * Half of the buffer is used for pixel data. The other half is attribute data.
  * I.e. each byte has an own attribute.
  */
-function createTimexHiColScreen() {
+export function createTimexHiColScreen() {
 	// Image
 	try {
 		// Check size
@@ -453,7 +454,7 @@ function createTimexHiColScreen() {
  * @param displayOffset The displayOffset is added to the index before displaying.
  * @param hoverRelativeOffset You can replace the default relative Offset hover text.
  */
-function createCopperDump() {
+export function createCopperDump() {
 	let html = '';
 
 	// In case of an error, show at least what has been parsed so far.

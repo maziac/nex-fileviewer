@@ -1,5 +1,5 @@
-//import {ImageConvert} from './imageconvert';
-declare var ImageConvert: any;
+import {ImageConvert} from './imageconvert';
+
 
 
 /**
@@ -118,7 +118,7 @@ export class UlaScreen {
 
 
 	/// @returns the ZX Spectrum palette.
-	protected static getZxPalette(): number[] {
+	public static getZxPalette(): number[] {
 		const palette=[
 			// Bright 0
 			0x00, 0x00, 0x00,

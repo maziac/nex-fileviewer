@@ -1,12 +1,6 @@
-declare var acquireVsCodeApi: any;
-declare var document: Document;
-declare var window: Window & typeof globalThis;;
-declare var ImageConvert: any;
-declare var UlaScreen: any;
-
-declare var dataBuffer: number[];
-declare var lastOffset: number;
-declare var lastNode: any;
+import {assert, getValue, read, createNode, addDetailsParsing, hex0xValue, addHoverValue, addDelayedDetailsParsing, createMemDump, lastOffset, parseInit, dataBuffer, lastNode, stringValue, createDescription, lastSize, lastDescriptionNode, addDescription, decimalValue, bitsValue, bitValue, hexValue, setLastSize} from "./parser";
+import {banksValue, coreVersionValue, createCopperDump, createLayer2Screen, createLayer2Screen320, createLayer2Screen640, createLoResScreen, createPalette, createPaletteImage, createPaletteWithOffset, createTimexHiColScreen, createTimexHiResScreen, getPalette, getZxNextDefaultPalette} from "./zxnext";
+import {createUlaScreen, getMemBankPermutation, zxColorValue} from './zxspecific';
 
 
 
@@ -109,7 +103,7 @@ Only Layer2, Tilemap and Lo-Res screens expect the palette block (unless +128 fl
 			createNode('BANKS', banksValue(), 'Array of included banks');
 			addDetailsParsing(() => {
 				createDescription('byte flag (0/1) of 16k banks included in the file - this array is in regular order 0..111, i.e. bank5 in file will set 1 to header byte at offset 18+5 = 23, but the 16kiB of data for bank 5 are first in the file (order of bank data in file is: 5,2,0,1,3,4,6,7,8,9,10,...,111)');
-				lastSize = 0;
+				setLastSize(0);
 				for (let i = 0; i < 112; i++) {
 					read(1);
 					createNode('Bank' + i, decimalValue());
@@ -439,6 +433,20 @@ When screens 320x256x8 or 640x256x4 are used, this byte is re-used as palette of
 			});
 		}
 	}
-
 }
 
+
+//---- Handle messages from vscode extension --------
+window.addEventListener('message', event => {	// NOSONAR
+	const message = event.data;
+
+	switch (message.command) {
+		case 'setData':
+			{
+				// Parse
+				parseInit(message.snaData);
+				// Parse
+				parseRoot();
+			} break;
+	}
+});

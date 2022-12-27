@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.5.0
+## 1.4.0
 - Changed to esbuild. Size decreased.
 
 ## 1.3.0

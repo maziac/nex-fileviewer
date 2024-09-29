@@ -173,7 +173,7 @@ When screens 320x256x8 or 640x256x4 are used, this byte is re-used as palette of
 				});
 			}
 			else {
-				// Version 1.2 or bigger
+				// Version 1.3 or bigger
 				read(1);
 				createNode('EXPBUS_ENABLE', decimalValue(), 'Enable Expansion Bus');
 				addDescription('0 = disable Expansion Bus by setting top four bits of Expansion Bus Enable Register ($80) to 0, 1 = do nothing (does apply only to cores 3.0.5+)');
@@ -240,7 +240,11 @@ When screens 320x256x8 or 640x256x4 are used, this byte is re-used as palette of
 		// Palette
 		let palette;
 		if (!(loadScreens & 0b1000_0000)	// Has no-palette not set
-			&& (loadScreens & 0b0100_0101))	// Layer2, LORES or LOADSCR2 is set
+			&& (
+				(loadScreens & 0b0000_0101)	// Layer2 or LORES is set
+				|| (((loadScreens & 0b0100_0000) && loadScreens2 == 3))	// LOADSCR2 is set and loadScreens2 = 3 (Tilemode)
+				)
+			)
 		{
 			read(512);
 			palette = getPalette();

@@ -2,7 +2,7 @@
     "name": "nex-fileviewer",
     "displayName": "NEX-FileViewer",
     "description": "A viewer for ZX Spectrum NEX (.nex) files.",
-    "version": "1.4.0",
+    "version": "1.4.1",
     "publisher": "maziac",
     "author": {
         "name": "Thomas Busse"
@@ -20,14 +20,13 @@
         "url": "https://github.com/maziac/nex-fileviewer"
     },
     "engines": {
-        "vscode": "^1.61.0"
+        "vscode": "^1.75.0"
     },
     "icon": "assets/local/icon.png",
     "categories": [
         "Visualization"
     ],
     "activationEvents": [
-        "onCustomEditor:nex-fileviewer.viewer",
         "onCommand:nex-fileviewer.opennex"
     ],
     "capabilities": {

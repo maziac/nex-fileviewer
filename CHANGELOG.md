@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.4.1
+- v1.3: Palette fix.
+
 ## 1.4.0
 - Changed to esbuild. Size decreased.
 
